@@ -1,13 +1,60 @@
-<!-- ================= HALAMAN UTAMA (MAIN DASHBOARD) ================= -->
-    <div id="main-page" class="min-h-screen flex flex-col md:flex-row hidden">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIM Bimbel Ilmana</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Memastikan halaman utama benar-benar terkunci saat web pertama kali dibuka */
+        .hidden-system { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <div id="login-page" class="min-h-screen flex items-center justify-center bg-gradient-to-tr from-slate-900 to-indigo-950 px-4">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="text-center mb-6">
+                <div class="inline-flex p-3 rounded-full bg-indigo-50 text-indigo-600 text-3xl mb-2">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900">Bimbel Ilmana</h1>
+                <p class="text-slate-500 text-xs mt-1">Sistem Informasi Manajemen Terintegrasi</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="username" required class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" id="password" required class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                </div>
+                <button type="submit" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
+                    <span>Masuk</span> <i class="fa-solid fa-right-to-bracket text-xs"></i>
+                </button>
+            </form>
+            <p id="login-error" class="text-red-500 text-xs text-center mt-3 hidden font-medium"></p>
+        </div>
+    </div>
+
+    <div id="main-page" class="min-h-screen flex flex-col md:flex-row hidden-system">
         
-        <!-- Sidebar Menu Navigasi -->
-        <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col">
+        <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0">
             <div class="p-5 flex items-center gap-3 border-b border-slate-800">
                 <i class="fa-solid fa-square-poll-vertical text-indigo-400 text-2xl"></i>
                 <div>
                     <h2 class="font-bold text-white text-sm tracking-wide">SIM Bimbel</h2>
-                    <p class="text-xs text-slate-400" id="user-role-display">Role: Admin</p>
+                    <p class="text-xs text-slate-400" id="user-role-display">Role: -</p>
                 </div>
             </div>
             <nav class="flex-1 p-4 space-y-1" id="sidebar-nav">
@@ -18,8 +65,6 @@
                 <a href="#" data-target="invoice" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-file-invoice-dollar w-5"></i> Invoice Siswa</a>
                 <a href="#" data-target="slipgaji" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-money-check-dollar w-5"></i> Slip Gaji Tentor</a>
                 <a href="#" data-target="keuangan" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-vault w-5"></i> Lap. Keuangan</a>
-                
-                <!-- MENU BARU: USER MANAGEMENT -->
                 <a href="#" data-target="usermanage" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hover:text-amber-300 border-t border-slate-800 pt-3 mt-2"><i class="fa-solid fa-user-gear w-5"></i> User Management</a>
             </nav>
             <div class="p-4 border-t border-slate-800">
@@ -29,9 +74,8 @@
             </div>
         </aside>
 
-        <!-- Area Konten Utama -->
         <main class="flex-1 p-6 md:p-8 overflow-y-auto">
-            <!-- DASHBOARD SECTION -->
+            
             <section id="content-dashboard" class="content-section space-y-6">
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900">Ringkasan Aktivitas</h1>
@@ -57,7 +101,6 @@
                 </div>
             </section>
 
-            <!-- SECTIONS UNTUK MATRIKS MENU CRUD (SEMUA PUNYA TOMBOL TAMBAH) -->
             <section id="content-siswa" class="content-section hidden space-y-4">
                 <div class="flex justify-between items-center"><h1 class="text-xl font-bold text-slate-900">Database Siswa</h1><button onclick="openCreateModal('Data Siswa')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-xl"><i class="fa-solid fa-plus mr-1"></i> Tambah Siswa</button></div>
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 overflow-x-auto" id="container-siswa"></div>
@@ -88,7 +131,6 @@
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 overflow-x-auto" id="container-keuangan"></div>
             </section>
 
-            <!-- SECTION BARU: USER MANAGEMENT -->
             <section id="content-usermanage" class="content-section hidden space-y-4">
                 <div class="flex justify-between items-center">
                     <div>
@@ -100,3 +142,7 @@
             </section>
         </main>
     </div>
+
+    <div id="crud-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden-system z-50">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+            <div class="
