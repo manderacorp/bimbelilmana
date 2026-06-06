@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Aksi Kirim Form Login
+// Ganti bagian loginForm.addEventListener di app.js Anda dengan ini:
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btnSubmit = document.getElementById('btn-login');
@@ -42,6 +42,12 @@ loginForm.addEventListener('submit', async (e) => {
                 password: document.getElementById('password').value 
             })
         });
+        
+        // Cek apakah server GAS merespon atau tidak
+        if (!response.ok) {
+            throw new Error(`Server GAS merespon dengan status: ${response.status}`);
+        }
+
         const res = await response.json();
         
         if (res.status === 'success') {
@@ -54,6 +60,8 @@ loginForm.addEventListener('submit', async (e) => {
             loginError.classList.remove('hidden');
         }
     } catch (err) {
+        // TAMPILKAN ERROR ASLINYA DI SINI, BOS!
+        alert("🚨 DETAIL ERROR LOGIN:\n" + err.message);
         loginError.innerText = "Koneksi database bermasalah."; 
         loginError.classList.remove('hidden');
     } finally {
