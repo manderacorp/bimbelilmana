@@ -127,18 +127,31 @@ async function fetchDashboard() {
 }
 
 // Generator Rendering Tabel CRUD Dinamis
+// CARI FUNGSI INI DI app.js DAN GANTI BAGIAN ATASNYA SAJA:
 async function fetchMenuData(target) {
     currentActiveMenu = target;
     const isUserManage = (target === 'usermanage');
     
-    const actionName = isUserManage ? 'getDataTentor' : 'getData' + target.charAt(0).toUpperCase() + target.slice(1);
+    // PEMBETULAN ROUTER DISINI, BOS:
+    let actionName = "";
+    if (isUserManage) {
+        actionName = 'getDataTentor';
+    } else if (target === 'siswa' || target === 'tentor') {
+        actionName = 'getData' + target.charAt(0).toUpperCase() + target.slice(1); // Jadi: getDataSiswa / getDataTentor
+    } else {
+        actionName = 'get' + target.charAt(0).toUpperCase() + target.slice(1); // Jadi: getJurnal, getInvoice, getSlipgaji, getKeuangan
+    }
+
     const sheetName = isUserManage ? 'Data Tentor' : getSheetNameMap(target);
     const container = document.getElementById(`container-${target}`);
     container.innerHTML = `<span class="text-xs text-slate-400"><i class="fa-solid fa-spinner animate-spin mr-1"></i> Sinkronisasi database...</span>`;
 
     try {
-        const response = await fetch(`${API_URL}?action=${isUserManage ? 'getDataTentor' : actionName}`);
+        // Panggil fetch menggunakan variabel actionName yang sudah diperbaiki
+        const response = await fetch(`${API_URL}?action=${actionName}`);
         const res = await response.json();
+        
+        // ... (Sisa kode di bawahnya biarkan tetap sama seperti aslinya) ...
 
         if (res.status === 'success' && res.data.length > 0) {
             currentSheetHeaders = Object.keys(res.data[0]);
