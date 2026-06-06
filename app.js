@@ -1,5 +1,5 @@
 // ISI DENGAN URL WEB APP YANG ANDA DAPATKAN SETELAH DEPLOY GOOGLE APPS SCRIPT
-const API_URL = "https://script.google.com/macros/s/AKfycbwbveg1PE9erHYL12x-Fn5vl2CMNJ4L00VBaelzZ4TTrvCEdmgRXXxzhzeJUlwGTKEV7w/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw027DZ7EEcIzIKxjHqXu-eLyWBELJl-KBmh5vWJeXyHqT0qawp7oq4u-oomAryZ8sw4w/exec";
 
 let currentSheetHeaders = [];
 let currentActiveMenu = "";
