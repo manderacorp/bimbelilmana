@@ -1,5 +1,5 @@
 // ISI DENGAN URL WEB APP DEPLOYMENT GAS ANDA
-const API_URL = "https://script.google.com/macros/s/AKfycbw027DZ7EEcIzIKxjHqXu-eLyWBELJl-KBmh5vWJeXyHqT0qawp7oq4u-oomAryZ8sw4w/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw_zlUNVWdZxGkFxXEcLnuZXPNZfsg6ICKr9I3LUUbhia3SSUeiwGkP7-wLOEnLsw_cPw/exec";
 
 // Inisialisasi DOM Selektor Global (Pastikan Sesuai Dengan ID di HTML)
 const loginPage = document.getElementById('login-page');
