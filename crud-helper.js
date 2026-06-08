@@ -1,5 +1,20 @@
 // SIM Admin Bimbel Ilmana - Core CRUD Helper System
 
+// ===================================================================
+// GLOBAL UTILITIES & SAFE GUARDS (PENGAMAN SYSTEM)
+// ===================================================================
+// Fungsi format rupiah global agar tidak memicu eror "formatIDR is not defined" di auth.js
+window.formatIDR = function(angka) {
+    if (angka === null || angka === undefined) return 'Rp 0';
+    const number = Number(angka);
+    if (isNaN(number)) return angka;
+    return 'Rp ' + number.toLocaleString('id-ID');
+};
+
+// ===================================================================
+// CORE CORE CRUD SYSTEM
+// ===================================================================
+
 // Fungsi Global Render Tabel dari File Menu Terpisah
 function renderTableModular(container, res, headers, sheetName) {
     if (res.status === 'success' && res.data && res.data.length > 0) {
