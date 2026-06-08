@@ -80,7 +80,7 @@ function showMainPage(role) {
     }
 }
 
-// Router SPA Ganti Menu Halaman Sidebar (SUDAH DIPERBAIKI STRUKTURNYA)
+// Router SPA Ganti Menu Halaman Sidebar (STRUKTUR SUDAH DIPERBAIKI SINKRON)
 navItems.forEach(item => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
@@ -93,9 +93,10 @@ navItems.forEach(item => {
         
         // Sembunyikan semua halaman, lalu munculkan halaman yang dituju
         contentSections.forEach(sec => sec.classList.add('hidden'));
-        document.getElementById(`content-${target}`).classList.remove('hidden');
+        const targetSection = document.getElementById(`content-${target}`);
+        if (targetSection) targetSection.classList.remove('hidden');
         
-        // Eksekusi fungsi penarik data sesuai target menu
+        // Eksekusi fungsi penarik data sesuai target menu secara presisi
         if (target === 'dashboard') {
             if (typeof fetchDashboard === 'function') fetchDashboard();
         } else if (target === 'siswa') {
@@ -110,11 +111,27 @@ navItems.forEach(item => {
             if (typeof fetchSlipgaji === 'function') fetchSlipgaji();
         } else if (target === 'keuangan') {
             if (typeof fetchKeuangan === 'function') fetchKeuangan();
+        } else if (target === 'usermanage') {
+            // Logika integrasi Manajemen Akses User (Menginduk ke data Sheet Tentor)
+            if (typeof fetchTentor === 'function') {
+                currentActiveMenu = "usermanage";
+                const container = document.getElementById('container-usermanage');
+                if (container) {
+                    container.innerHTML = `<span class="text-xs text-slate-400"><i class="fa-solid fa-spinner animate-spin mr-1"></i> Memuat Akses Login...</span>`;
+                    
+                    fetch(`${API_URL}?action=getDataTentor`)
+                        .then(res => res.json())
+                        .then(res => renderTableModular(container, res, ["ID", "Nama Tentor", "Username", "Password"], 'Data Tentor'))
+                        .catch(() => container.innerHTML = `<div class="text-xs text-rose-500 py-4 text-center">Gagal memuat data akses.</div>`);
+                }
+            }
         }
     });
 });
 
 // Utilitas Global Format Mata Uang Rupiah
 function formatIDR(num) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+}
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
 }
