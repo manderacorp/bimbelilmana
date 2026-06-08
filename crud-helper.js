@@ -131,3 +131,45 @@ function refreshCurrentActiveMenu() {
     else if (currentActiveMenu === 'keuangan') fetchKeuangan();
     else if (currentActiveMenu === 'dashboard' && typeof fetchDashboard === 'function') fetchDashboard();
 }
+
+// ==========================================
+// BRIDGE TRIGGER UNTUK TOMBOL TAMBAH DATA (CREATE)
+// ==========================================
+
+// 1. Tambah Siswa
+window.openCreateSiswa = function() {
+    // Sesuaikan susunan array ini dengan nama kolom di Google Sheet 'Siswa' Anda
+    const headersSiswa = ["id_siswa", "nama", "kelas", "status"]; 
+    setupModalDinamis("Tambah Siswa Baru", "Siswa", "create", headersSiswa);
+};
+
+// 2. Tambah Tentor
+window.openCreateTentor = function() {
+    // Sesuaikan susunan array ini dengan nama kolom di Google Sheet 'Tentor' Anda
+    const headersTentor = ["id_tentor", "nama_tentor", "username", "password"]; 
+    setupModalDinamis("Tambah Tentor Baru", "Tentor", "create", headersTentor);
+};
+
+// 3. Tambah Jurnal Mengajar
+window.openCreateJurnal = function() {
+    const headersJurnal = ["id_jurnal", "tanggal", "nama_tentor", "nama_siswa", "materi", "status_absen"]; 
+    setupModalDinamis("Tambah Jurnal Mengajar", "Jurnal", "create", headersJurnal);
+};
+
+// 4. Tambah Invoice Pembayaran Siswa
+window.openCreateInvoice = function() {
+    const headersInvoice = ["id_invoice", "id_siswa", "bulan", "tagihan", "status_bayar"]; 
+    setupModalDinamis("Buat Invoice Baru", "Invoice", "create", headersInvoice);
+};
+
+// 5. Tambah Slip Gaji Tentor
+window.openCreateSlipgaji = function() {
+    const headersSlip = ["id_slip", "id_tentor", "bulan", "gaji_pokok", "bonus", "total_gaji"]; 
+    setupModalDinamis("Buat Slip Gaji Baru", "SlipGaji", "create", headersSlip);
+};
+
+// 6. Catat Transaksi Buku Kas Keuangan
+window.openCreateKeuangan = function() {
+    const headersKeuangan = ["id_transaksi", "tanggal", "keterangan", "jenis", "jumlah"]; 
+    setupModalDinamis("Catat Transaksi Baru", "Keuangan", "create", headersKeuangan);
+};
