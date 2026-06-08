@@ -25,48 +25,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Aksi Pengiriman Form Login
-loginForm.addEventListener('submit', async (e) => {
+// KODE TES DETEKSI TOMBOL LOGIN
+loginForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    const btnSubmit = document.getElementById('btn-login');
-    btnSubmit.disabled = true;
-    btnSubmit.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> Validasi...`;
-    loginError.classList.add('hidden');
-
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({ 
-                action: 'login', 
-                username: document.getElementById('username').value, 
-                password: document.getElementById('password').value 
-            })
-        });
-        
-        // Cek apakah server GAS merespon atau tidak
-        if (!response.ok) {
-            throw new Error(`Server GAS merespon dengan status: ${response.status}`);
-        }
-
-        const res = await response.json();
-        
-        if (res.status === 'success') {
-            localStorage.setItem('bimbel_token', res.token);
-            localStorage.setItem('bimbel_username', res.username);
-            localStorage.setItem('bimbel_role', res.role);
-            showMainPage(res.role);
-        } else {
-            loginError.innerText = res.message; 
-            loginError.classList.remove('hidden');
-        }
-    } catch (err) {
-        alert("🚨 DETAIL ERROR LOGIN:\n" + err.message);
-        loginError.innerText = "Koneksi database bermasalah."; 
-        loginError.classList.remove('hidden');
-    } finally {
-        btnSubmit.disabled = false; 
-        btnSubmit.innerHTML = `<span>Masuk</span> <i class="fa-solid fa-right-to-bracket text-xs"></i>`;
-    }
+    
+    const userKetik = document.getElementById('username').value;
+    const passKetik = document.getElementById('password').value;
+    
+    alert("=== KAMERA PENGINTAI AKTIF ===\n\n" +
+          "Tombol masuk berhasil merespon!\n" +
+          "Username yang Anda ketik: " + userKetik + "\n" +
+          "Password yang Anda ketik: " + passKetik + "\n\n" +
+          "Jika teks ini muncul, berarti HTML & JS Anda 100% SEHAT.");
 });
 
 // Aksi Logout
