@@ -168,4 +168,138 @@ async function fetchMenuData(target) {
                 const idValue = row[idKey] ? row[idKey].toString().replace(/'/g, "\\'") : "";
                 
                 // Konversi objek baris data ke Base64 agar karakter khusus tidak merusak sintaks HTML onclick
-                const rowEscaped = btoa(encodeURIComponent
+                const rowEscaped = btoa(encodeURIComponent(JSON.stringify(row)));
+                
+                tableHTML += `<td class="px-4 py-2 text-center flex justify-center gap-2">
+                    <button onclick="openEditModal('${sheetName}', '${idValue}', '${rowEscaped}', ${isUserManage})" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded-md cursor-pointer" title="Ubah"><i class="fa-solid fa-pen-to-square"></i></button>
+                    ${!isUserManage ? `<button onclick="executeDelete('${sheetName}', '${idValue}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-md cursor-pointer" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                </td></tr>`;
+            });
+            container.innerHTML = tableHTML + `</tbody></table>`;
+        } else {
+            container.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">Tabel kosong atau data belum dimasukkan.</div>`;
+        }
+    } catch (err) { 
+        console.error(err);
+        container.innerHTML = `<div class="text-xs text-rose-500 py-4 text-center">Gagal memuat data dari spreadsheet.</div>`; 
+    }
+}
+
+function getSheetNameMap(target) {
+    return { 
+        siswa: 'Data Siswa', 
+        tentor: 'Data Tentor', 
+        jurnal: 'Jurnal', 
+        invoice: 'Invoice', 
+        slipgaji: 'Slip Gaji', 
+        keuangan: 'Laporan Keuangan' 
+    }[target];
+}
+
+// Window Event Binding Global Scope
+window.openCreateModal = function(sheetName) {
+    document.getElementById('modal-title').innerText = `Tambah Data (${sheetName})`;
+    document.getElementById('modal-sheet-name').value = sheetName;
+    document.getElementById('modal-action-type').value = "create";
+    document.getElementById('modal-id').value = "";
+    generateFormFields(sheetName, null, false);
+    document.getElementById('crud-modal').classList.remove('hidden-system');
+}
+
+window.openEditModal = function(sheetName, idValue, rowBase64, isUserManage = false) {
+    const rowData = JSON.parse(decodeURIComponent(atob(rowBase64)));
+    document.getElementById('modal-title').innerText = isUserManage ? `Ubah Akses Login Tentor` : `Ubah Data - ${idValue}`;
+    document.getElementById('modal-sheet-name').value = sheetName;
+    document.getElementById('modal-action-type').value = "update";
+    document.getElementById('modal-id').value = idValue;
+    generateFormFields(sheetName, rowData, isUserManage);
+    document.getElementById('crud-modal').classList.remove('hidden-system');
+}
+
+window.closeCrudModal = function() {
+    document.getElementById('crud-modal').classList.add('hidden-system');
+    document.getElementById('crud-form').reset();
+}
+
+function generateFormFields(sheetName, rowData, isUserManage) {
+    const container = document.getElementById('modal-fields-container');
+    container.innerHTML = "";
+
+    currentSheetHeaders.forEach((header, index) => {
+        if (index === 0 && !isUserManage) return; // Sembunyikan kolom ID utama agar terisi otomatis oleh sistem otomatis GAS
+        if (isUserManage && !/username|password/i.test(header)) return; // Filter khusus sub-menu manajemen akses user
+
+        const value = rowData ? rowData[header] : "";
+        container.innerHTML += `<div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1 capitalize">${header}</label>
+            <input type="${/password/i.test(header) ? 'password' : 'text'}" name="${header}" value="${value}" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>`;
+    });
+}
+
+// Eksekusi Form Pembuatan / Pembaruan Data
+document.getElementById('crud-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-save-crud');
+    btn.disabled = true; 
+    btn.innerText = "Menyimpan...";
+
+    let formData = {};
+    const elements = document.getElementById('crud-form').elements;
+    for (let i = 0; i < elements.length; i++) {
+        if (elements[i].name) formData[elements[i].name] = elements[i].value;
+    }
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: document.getElementById('modal-action-type').value,
+                sheetName: document.getElementById('modal-sheet-name').value,
+                id: document.getElementById('modal-id').value,
+                formData: formData
+            })
+        });
+        const res = await response.json();
+        if (res.status === 'success') {
+            closeCrudModal(); 
+            if (currentActiveMenu === 'usermanage') {
+                fetchMenuData('usermanage');
+            } else {
+                fetchMenuData(currentActiveMenu);
+            }
+        } else { 
+            alert(res.message); 
+        }
+    } catch (err) { 
+        alert("Gagal memproses data ke server spreadsheet."); 
+    } finally { 
+        btn.disabled = false; 
+        btn.innerText = "Simpan Data"; 
+    }
+});
+
+// Eksekusi Penghapusan Data
+window.executeDelete = async function(sheetName, idValue) {
+    if (confirm(`Apakah Anda yakin ingin menghapus data dengan ID: ${idValue}?`)) {
+        try {
+            const response = await fetch(API_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'delete', sheetName, id: idValue }) 
+            });
+            const res = await response.json();
+            if (res.status === 'success') {
+                fetchMenuData(currentActiveMenu);
+            } else {
+                alert(res.message);
+            }
+        } catch (err) { 
+            alert("Sistem gagal menghapus data."); 
+        }
+    }
+}
+
+// Utilitas Format Angka ke Rupiah Indonesia
+function formatIDR(num) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+}
