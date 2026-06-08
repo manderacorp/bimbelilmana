@@ -1,5 +1,5 @@
 // KUNCI URL WEB APP DEPLOYMENT GAS ANDA
-const API_URL = "https://script.google.com/macros/s/AKfycbw62osCNy3X1e1S2V3q4lLgVdQuBDcxWkOSQt5Cv56jcy2LYlYpPdxMSUYxpqclzDH4EQ/exec"; // <-- Tempel URL Deployment GAS Anda di sini
+const API_URL = "https://script.google.com/macros/s/AKfycbw62osCNy3X1e1S2V3q4lLgVdQuBDcxWkOSQt5Cv56jcy2LYlYpPdxMSUYxpqclzDH4EQ/exec"; 
 
 // Inisialisasi Selektor Kontrol DOM Autentikasi
 const loginPage = document.getElementById('login-page');
@@ -80,23 +80,39 @@ function showMainPage(role) {
     }
 }
 
-// Router SPA Ganti Menu Halaman Sidebar
-// Ganti bagian akhir dari fungsi klik navItems di auth.js Bos menjadi seperti ini:
-if (target === 'dashboard') {
-    if (typeof fetchDashboard === 'function') fetchDashboard();
-} else if (target === 'siswa') {
-    fetchSiswa();
-} else if (target === 'tentor') {
-    fetchTentor();
-} else if (target === 'jurnal') {
-    fetchJurnal();
-} else if (target === 'invoice') {
-    fetchInvoice();
-} else if (target === 'slipgaji') {
-    fetchSlipgaji();
-} else if (target === 'keuangan') {
-    fetchKeuangan();
-}
+// Router SPA Ganti Menu Halaman Sidebar (SUDAH DIPERBAIKI STRUKTURNYA)
+navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = item.getAttribute('data-target');
+        currentActiveMenu = target;
+        
+        // Atur efek aktif warna background menu di sidebar
+        navItems.forEach(nav => nav.classList.remove('bg-indigo-600', 'text-white'));
+        item.classList.add('bg-indigo-600', 'text-white');
+        
+        // Sembunyikan semua halaman, lalu munculkan halaman yang dituju
+        contentSections.forEach(sec => sec.classList.add('hidden'));
+        document.getElementById(`content-${target}`).classList.remove('hidden');
+        
+        // Eksekusi fungsi penarik data sesuai target menu
+        if (target === 'dashboard') {
+            if (typeof fetchDashboard === 'function') fetchDashboard();
+        } else if (target === 'siswa') {
+            if (typeof fetchSiswa === 'function') fetchSiswa();
+        } else if (target === 'tentor') {
+            if (typeof fetchTentor === 'function') fetchTentor();
+        } else if (target === 'jurnal') {
+            if (typeof fetchJurnal === 'function') fetchJurnal();
+        } else if (target === 'invoice') {
+            if (typeof fetchInvoice === 'function') fetchInvoice();
+        } else if (target === 'slipgaji') {
+            if (typeof fetchSlipgaji === 'function') fetchSlipgaji();
+        } else if (target === 'keuangan') {
+            if (typeof fetchKeuangan === 'function') fetchKeuangan();
+        }
+    });
+});
 
 // Utilitas Global Format Mata Uang Rupiah
 function formatIDR(num) {
