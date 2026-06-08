@@ -81,25 +81,22 @@ function showMainPage(role) {
 }
 
 // Router SPA Ganti Menu Halaman Sidebar
-navItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-        e.preventDefault();
-        const target = item.getAttribute('data-target');
-        currentActiveMenu = target;
-        
-        navItems.forEach(nav => nav.classList.remove('bg-indigo-600', 'text-white'));
-        item.classList.add('bg-indigo-600', 'text-white');
-        
-        contentSections.forEach(sec => sec.classList.add('hidden'));
-        document.getElementById(`content-${target}`).classList.remove('hidden');
-        
-        if (target === 'dashboard') {
-            if (typeof fetchDashboard === 'function') fetchDashboard();
-        } else {
-            if (typeof fetchMenuData === 'function') fetchMenuData(target);
-        }
-    });
-});
+// Ganti bagian akhir dari fungsi klik navItems di auth.js Bos menjadi seperti ini:
+if (target === 'dashboard') {
+    if (typeof fetchDashboard === 'function') fetchDashboard();
+} else if (target === 'siswa') {
+    fetchSiswa();
+} else if (target === 'tentor') {
+    fetchTentor();
+} else if (target === 'jurnal') {
+    fetchJurnal();
+} else if (target === 'invoice') {
+    fetchInvoice();
+} else if (target === 'slipgaji') {
+    fetchSlipgaji();
+} else if (target === 'keuangan') {
+    fetchKeuangan();
+}
 
 // Utilitas Global Format Mata Uang Rupiah
 function formatIDR(num) {
