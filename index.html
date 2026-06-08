@@ -3,146 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIM Bimbel Ilmana</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>SIM Admin - Bimbel Ilmana</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        /* Memastikan halaman utama benar-benar terkunci saat web pertama kali dibuka */
         .hidden-system { display: none !important; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans">
+<body class="bg-slate-50 font-sans text-slate-800 antialiased">
 
-    <div id="login-page" class="min-h-screen flex items-center justify-center bg-gradient-to-tr from-slate-900 to-indigo-950 px-4">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
-            <div class="text-center mb-6">
-                <div class="inline-flex p-3 rounded-full bg-indigo-50 text-indigo-600 text-3xl mb-2">
-                    <i class="fa-solid fa-graduation-cap"></i>
+    <div id="login-page" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-4">
+        <div class="w-full max-w-md bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="inline-flex p-3 bg-indigo-600 rounded-2xl text-white shadow-lg mb-3">
+                    <i class="fa-solid fa-graduation-cap text-3xl"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-slate-900">Bimbel Ilmana</h1>
-                <p class="text-slate-500 text-xs mt-1">Sistem Informasi Manajemen Terintegrasi</p>
+                <h1 class="text-2xl font-bold text-white tracking-wide">Bimbel Ilmana</h1>
+                <p class="text-xs text-slate-300 mt-1">Sistem Informasi Manajemen Akademik & Keuangan</p>
             </div>
-            
-            <form id="login-form" class="space-y-4">
+
+            <form id="login-form" class="space-y-5">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Username</label>
+                    <label class="block text-xs font-semibold text-slate-200 mb-1.5">Username</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
-                        <input type="text" id="username" required class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-user text-xs"></i>
+                        </span>
+                        <input type="text" id="username" required placeholder="Masukkan username admin/tentor" class="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                     </div>
                 </div>
+
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
+                    <label class="block text-xs font-semibold text-slate-200 mb-1.5">Password</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock"></i></span>
-                        <input type="password" id="password" required class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-lock text-xs"></i>
+                        </span>
+                        <input type="password" id="password" required placeholder="••••••••" class="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                     </div>
                 </div>
-                <button type="submit" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
-                    <span>Masuk</span> <i class="fa-solid fa-right-to-bracket text-xs"></i>
+
+                <div id="login-error" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-xl text-center">
+                    Username atau Password salah!
+                </div>
+
+                <button type="submit" id="btn-login" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <span>Masuk</span>
+                    <i class="fa-solid fa-right-to-bracket text-xs"></i>
                 </button>
             </form>
-            <p id="login-error" class="text-red-500 text-xs text-center mt-3 hidden font-medium"></p>
         </div>
     </div>
 
-    <div id="main-page" class="min-h-screen flex flex-col md:flex-row hidden-system">
+    <div id="main-page" class="hidden-system min-h-screen flex flex-col md:flex-row">
         
-        <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0">
-            <div class="p-5 flex items-center gap-3 border-b border-slate-800">
-                <i class="fa-solid fa-square-poll-vertical text-indigo-400 text-2xl"></i>
+        <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800">
+            <div class="p-5 border-b border-slate-800 flex items-center gap-3">
+                <div class="p-2 bg-indigo-600 rounded-xl text-white text-sm">
+                    <i class="fa-solid fa-database"></i>
+                </div>
                 <div>
-                    <h2 class="font-bold text-white text-sm tracking-wide">SIM Bimbel</h2>
-                    <p class="text-xs text-slate-400" id="user-role-display">Role: -</p>
+                    <h2 class="text-sm font-bold text-white tracking-wide">Panel Utama</h2>
+                    <span id="user-role-display" class="text-[10px] text-indigo-400 block font-medium">Role: Admin</span>
                 </div>
             </div>
-            <nav class="flex-1 p-4 space-y-1" id="sidebar-nav">
-                <a href="#" data-target="dashboard" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white"><i class="fa-solid fa-chart-pie w-5"></i> Dashboard</a>
-                <a href="#" data-target="siswa" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-user-graduate w-5"></i> Data Siswa</a>
-                <a href="#" data-target="tentor" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-chalkboard-user w-5"></i> Data Tentor</a>
-                <a href="#" data-target="jurnal" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-book w-5"></i> Jurnal Mengajar</a>
-                <a href="#" data-target="invoice" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-file-invoice-dollar w-5"></i> Invoice Siswa</a>
-                <a href="#" data-target="slipgaji" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-money-check-dollar w-5"></i> Slip Gaji Tentor</a>
-                <a href="#" data-target="keuangan" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-vault w-5"></i> Lap. Keuangan</a>
-                <a href="#" data-target="usermanage" class="nav-item flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hover:text-amber-300 border-t border-slate-800 pt-3 mt-2"><i class="fa-solid fa-user-gear w-5"></i> User Management</a>
+            
+            <nav class="flex-1 p-4 space-y-1.5 text-xs">
+                <a href="#" data-target="dashboard" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-medium transition-all">
+                    <i class="fa-solid fa-chart-pie w-4"></i> Dashboard
+                </a>
+                <a href="#" data-target="siswa" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-children w-4"></i> Data Siswa
+                </a>
+                <a href="#" data-target="tentor" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-chalkboard-user w-4"></i> Data Tentor
+                </a>
+                <a href="#" data-target="jurnal" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-book w-4"></i> Jurnal Mengajar
+                </a>
+                <a href="#" data-target="invoice" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-file-invoice-dollar w-4"></i> Invoice Siswa
+                </a>
+                <a href="#" data-target="slipgaji" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-receipt w-4"></i> Slip Gaji Tentor
+                </a>
+                <a href="#" data-target="keuangan" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-wallet w-4"></i> Laporan Keuangan
+                </a>
+                <div class="pt-4 my-2 border-t border-slate-800"></div>
+                <a href="#" data-target="usermanage" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-user-gear w-4"></i> Manajemen Akses Login
+                </a>
             </nav>
+
             <div class="p-4 border-t border-slate-800">
-                <button id="btn-logout" class="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-950/40 hover:text-rose-300">
-                    <i class="fa-solid fa-power-off w-5"></i> Keluar
+                <button id="btn-logout" class="w-full py-2 bg-rose-600/10 hover:bg-rose-600 text-rose-500 hover:text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-power-off text-xs"></i> Keluar Sistem
                 </button>
             </div>
         </aside>
 
-        <main class="flex-1 p-6 md:p-8 overflow-y-auto">
+        <main class="flex-1 bg-slate-50 p-6 md:p-8 overflow-y-auto">
             
             <section id="content-dashboard" class="content-section space-y-6">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Ringkasan Aktivitas</h1>
-                    <p class="text-slate-500 text-xs">Arus kas operasional Bimbel Ilmana.</p>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">Ringkasan Sistem</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Statistik laporan keuangan berkala Bimbel Ilmana</p>
+                    </div>
                 </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
-                        <div><p class="text-xs font-semibold text-slate-400 uppercase">Pemasukan</p><h3 id="dash-pemasukan" class="text-lg font-bold text-emerald-600 mt-1">Rp 0</h3></div>
-                        <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i class="fa-solid fa-arrow-down-long text-lg"></i></div>
+                        <div>
+                            <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Total Pemasukan</span>
+                            <h3 id="dash-pemasukan" class="text-base font-bold text-slate-800 mt-0.5">Rp 0</h3>
+                        </div>
                     </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
-                        <div><p class="text-xs font-semibold text-slate-400 uppercase">Pengeluaran</p><h3 id="dash-pengeluaran" class="text-lg font-bold text-rose-600 mt-1">Rp 0</h3></div>
-                        <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                        <div class="p-3 bg-rose-50 text-rose-600 rounded-xl"><i class="fa-solid fa-arrow-up-long text-lg"></i></div>
+                        <div>
+                            <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Total Pengeluaran</span>
+                            <h3 id="dash-pengeluaran" class="text-base font-bold text-slate-800 mt-0.5">Rp 0</h3>
+                        </div>
                     </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
-                        <div><p class="text-xs font-semibold text-slate-400 uppercase">Saldo Kas</p><h3 id="dash-saldo" class="text-lg font-bold text-indigo-600 mt-1">Rp 0</h3></div>
-                        <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                        <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i class="fa-solid fa-scale-balanced text-lg"></i></div>
+                        <div>
+                            <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Sisa Saldo Kas</span>
+                            <h3 id="dash-saldo" class="text-base font-bold text-slate-800 mt-0.5">Rp 0</h3>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="px-5 py-4 border-b border-slate-100"><h3 class="font-bold text-slate-900 text-sm">10 Riwayat Aktivitas Transaksi Terakhir</h3></div>
-                    <div class="overflow-x-auto"><table class="w-full text-left text-xs text-slate-600"><thead class="bg-slate-50 text-slate-500 border-b border-slate-100"><tr><th class="px-6 py-3">Tanggal</th><th class="px-6 py-3">Keterangan</th><th class="px-6 py-3 text-right">Jumlah</th></tr></thead><tbody id="log-keuangan-table" class="divide-y divide-slate-100"></tbody></table></div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-700"><i class="fa-solid fa-clock-rotate-left mr-1.5 text-indigo-500"></i> 10 Riwayat Keuangan Terakhir</h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 text-slate-500 font-medium">
+                                <tr>
+                                    <th class="px-6 py-3">Tanggal</th>
+                                    <th class="px-6 py-3">Keterangan Transaksi</th>
+                                    <th class="px-6 py-3 text-right">Jumlah (IDR)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="log-keuangan-table" class="divide-y divide-slate-100">
+                                <tr><td colspan="3" class="px-6 py-4 text-center text-slate-400">Memuat riwayat transaksi...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
             <section id="content-siswa" class="content-section hidden space-y-4">
-                <div class="flex justify-between items-center"><h1 class="text-xl font-bold text-slate-900">Database Siswa</h1><button onclick="openCreateModal('Data Siswa')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-xl"><i class="fa-solid fa-plus mr-1"></i> Tambah Siswa</button></div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 overflow-x-auto" id="container-siswa"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-700">Database Data Siswa</h3>
+                    <button onclick="openCreateModal('Data Siswa')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Tambah Siswa</button>
+                </div>
+                <div id="container-siswa" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
             </section>
 
             <section id="content-tentor" class="content-section hidden space-y-4">
-                <div class="flex justify-between items-center"><h1 class="text-xl font-bold text-slate-900">Database Tentor</h1><button onclick="openCreateModal('Data Tentor')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-xl"><i class="fa-solid fa-plus mr-1"></i> Tambah Tentor</button></div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 overflow-x-auto" id="container-tentor"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-700">Database Data Tentor</h3>
+                    <button onclick="openCreateModal('Data Tentor')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Tambah Tentor</button>
+                </div>
+                <div id="container-tentor" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
             </section>
 
             <section id="content-jurnal" class="content-section hidden space-y-4">
-                <div class="flex justify-between items-center"><h1 class="text-xl font-bold text-slate-900">Jurnal Mengajar</h1><button onclick="openCreateModal('Jurnal')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-xl"><i class="fa-solid fa-plus mr-1"></i> Isi Jurnal</button></div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 overflow-x-auto" id="container-jurnal"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-700">Database Jurnal Mengajar</h3>
+                    <button onclick="openCreateModal('Jurnal')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Tambah Jurnal</button>
+                </div>
+                <div id="container-jurnal" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
             </section>
 
             <section id="content-invoice" class="content-section hidden space-y-4">
-                <div class="flex justify-between items-center"><h1 class="text-xl font-bold text-slate-900">Invoice Bulanan Siswa</h1><button onclick="openCreateModal('Invoice')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-xl"><i class="fa-solid fa-plus mr-1"></i> Buat Invoice</button></div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 overflow-x-auto" id="container-invoice"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-700">Database Invoice Pembayaran Siswa</h3>
+                    <button onclick="openCreateModal('Invoice')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Buat Invoice</button>
+                </div>
+                <div id="container-invoice" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
             </section>
 
             <section id="content-slipgaji" class="content-section hidden space-y-4">
-                <div class="flex justify-between items-center"><h1 class="text-xl font-bold text-slate-900">Slip Gaji Tentor</h1><button onclick="openCreateModal('Slip Gaji')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-xl"><i class="fa-solid fa-plus mr-1"></i> Cetak Slip Baru</button></div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 overflow-x-auto" id="container-slipgaji"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-700">Database Slip Gaji Tentor</h3>
+                    <button onclick="openCreateModal('Slip Gaji')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Buat Slip Gaji</button>
+                </div>
+                <div id="container-slipgaji" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
             </section>
 
             <section id="content-keuangan" class="content-section hidden space-y-4">
-                <div class="flex justify-between items-center"><h1 class="text-xl font-bold text-slate-900">Buku Besar & Laporan Keuangan</h1><button onclick="openCreateModal('Laporan Keuangan')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-xl"><i class="fa-solid fa-plus mr-1"></i> Input Transaksi</button></div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 overflow-x-auto" id="container-keuangan"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-700">Database Catatan Buku Kas Keuangan</h3>
+                    <button onclick="openCreateModal('Laporan Keuangan')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Catat Transaksi</button>
+                </div>
+                <div id="container-keuangan" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
             </section>
 
             <section id="content-usermanage" class="content-section hidden space-y-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-xl font-bold text-slate-900">User Management Tentor</h1>
-                        <p class="text-xs text-slate-500">Kelola kredensial username dan password untuk hak akses login tentor.</p>
+                        <h3 class="text-sm font-bold text-slate-700">Manajemen Akses Login</h3>
+                        <p class="text-[11px] text-slate-400">Gunakan tombol ubah (pensil) pada nama tentor di bawah ini untuk mengatur username & password login milik tentor.</p>
                     </div>
                 </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 overflow-x-auto" id="container-usermanage"></div>
+                <div id="container-usermanage" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
             </section>
+
         </main>
     </div>
 
-    <div id="crud-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden-system z-50">
-        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
-            <div class="
+    <div id="crud-modal" class="hidden-system fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="bg-white w-full max-w-lg rounded-2xl border border-slate-100 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <h3 id="modal-title" class="text-xs font-bold text-slate-700">Kelola Data</h3>
+                <button onclick="closeCrudModal()" class="text-slate-400 hover:text-slate-600 text-sm cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="crud-form" class="flex flex-col flex-1 overflow-hidden">
+                <input type="hidden" id="modal-sheet-name">
+                <input type="hidden" id="modal-action-type">
+                <input type="hidden" id="modal-id">
+
+                <div id="modal-fields-container" class="p-6 space-y-4 overflow-y-auto flex-1"></div>
+
+                <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-end gap-2.5">
+                    <button type="button" onclick="closeCrudModal()" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 font-medium hover:bg-slate-50 cursor-pointer">Batal</button>
+                    <button type="submit" id="btn-save-crud" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-medium shadow-sm cursor-pointer">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
