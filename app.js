@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Ganti bagian loginForm.addEventListener di app.js Anda dengan ini:
+// Aksi Pengiriman Form Login
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btnSubmit = document.getElementById('btn-login');
@@ -60,7 +60,6 @@ loginForm.addEventListener('submit', async (e) => {
             loginError.classList.remove('hidden');
         }
     } catch (err) {
-        // TAMPILKAN ERROR ASLINYA DI SINI, BOS!
         alert("🚨 DETAIL ERROR LOGIN:\n" + err.message);
         loginError.innerText = "Koneksi database bermasalah."; 
         loginError.classList.remove('hidden');
@@ -127,19 +126,17 @@ async function fetchDashboard() {
 }
 
 // Generator Rendering Tabel CRUD Dinamis
-// CARI FUNGSI INI DI app.js DAN GANTI BAGIAN ATASNYA SAJA:
 async function fetchMenuData(target) {
     currentActiveMenu = target;
     const isUserManage = (target === 'usermanage');
     
-    // PEMBETULAN ROUTER DISINI, BOS:
     let actionName = "";
     if (isUserManage) {
         actionName = 'getDataTentor';
     } else if (target === 'siswa' || target === 'tentor') {
-        actionName = 'getData' + target.charAt(0).toUpperCase() + target.slice(1); // Jadi: getDataSiswa / getDataTentor
+        actionName = 'getData' + target.charAt(0).toUpperCase() + target.slice(1);
     } else {
-        actionName = 'get' + target.charAt(0).toUpperCase() + target.slice(1); // Jadi: getJurnal, getInvoice, getSlipgaji, getKeuangan
+        actionName = 'get' + target.charAt(0).toUpperCase() + target.slice(1);
     }
 
     const sheetName = isUserManage ? 'Data Tentor' : getSheetNameMap(target);
@@ -147,15 +144,12 @@ async function fetchMenuData(target) {
     container.innerHTML = `<span class="text-xs text-slate-400"><i class="fa-solid fa-spinner animate-spin mr-1"></i> Sinkronisasi database...</span>`;
 
     try {
-        // Panggil fetch menggunakan variabel actionName yang sudah diperbaiki
         const response = await fetch(`${API_URL}?action=${actionName}`);
         const res = await response.json();
-        
-        // ... (Sisa kode di bawahnya biarkan tetap sama seperti aslinya) ...
 
         if (res.status === 'success' && res.data.length > 0) {
             currentSheetHeaders = Object.keys(res.data[0]);
-            let headers = isUserManage ? ['ID Tentor', 'Nama Tentor', 'Username', 'Password'] : currentSheetHeaders;
+            let headers = currentSheetHeaders;
 
             let tableHTML = `<table class="w-full text-left text-xs text-slate-600 border border-slate-100 rounded-lg overflow-hidden"><thead class="bg-slate-50 text-slate-500"><tr>`;
             headers.forEach(h => tableHTML += `<th class="px-4 py-3 capitalize">${h}</th>`);
@@ -169,8 +163,9 @@ async function fetchMenuData(target) {
                     tableHTML += `<td class="px-4 py-3">${val}</td>`;
                 });
 
-                const idValue = row[currentSheetHeaders[0]];
-                const rowEscaped = btoa(unescape(encodeURIComponent(JSON.stringify(row))));
+                const idKey = currentSheetHeaders[0];
+                const idValue = row[idKey] ? row[idKey].toString().replace(/'/g, "\\'") : "";
+                const rowEscaped = btoa(encodeURIComponent(JSON.stringify(row)));
                 
                 tableHTML += `<td class="px-4 py-2 text-center flex justify-center gap-2">
                     <button onclick="openEditModal('${sheetName}', '${idValue}', '${rowEscaped}', ${isUserManage})" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded-md" title="Ubah"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -181,14 +176,17 @@ async function fetchMenuData(target) {
         } else {
             container.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">Tabel kosong atau data belum dimasukkan.</div>`;
         }
-    } catch (err) { container.innerHTML = `<div class="text-xs text-rose-500 py-4 text-center">Gagal memuat data dari spreadsheet.</div>`; }
+    } catch (err) { 
+        console.error(err);
+        container.innerHTML = `<div class="text-xs text-rose-500 py-4 text-center">Gagal memuat data dari spreadsheet.</div>`; 
+    }
 }
 
 function getSheetNameMap(target) {
     return { siswa: 'Data Siswa', tentor: 'Data Tentor', jurnal: 'Jurnal', invoice: 'Invoice', slipgaji: 'Slip Gaji', keuangan: 'Laporan Keuangan' }[target];
 }
 
-// Window Event Binding agar Fungsi Tetap Terbaca di HTML Global Scope Scope
+// Window Event Binding agar Fungsi Tetap Terbaca di HTML Global Scope
 window.openCreateModal = function(sheetName) {
     document.getElementById('modal-title').innerText = `Tambah Data (${sheetName})`;
     document.getElementById('modal-sheet-name').value = sheetName;
@@ -199,7 +197,7 @@ window.openCreateModal = function(sheetName) {
 }
 
 window.openEditModal = function(sheetName, idValue, rowBase64, isUserManage = false) {
-    const rowData = JSON.parse(decodeURIComponent(escape(atob(rowBase64))));
+    const rowData = JSON.parse(decodeURIComponent(atob(rowBase64)));
     document.getElementById('modal-title').innerText = isUserManage ? `Ubah Akses Login Tentor` : `Ubah Data - ${idValue}`;
     document.getElementById('modal-sheet-name').value = sheetName;
     document.getElementById('modal-action-type').value = "update";
