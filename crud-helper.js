@@ -31,7 +31,7 @@ function renderTableModular(container, res, headers, sheetName) {
     }
 }
 
-// Logic Pembentukan Struktur Form Pop Up Dinamis Beserta Isinya (SUDAH DIPERBAIKI)
+// Logic Pembentukan Struktur Form Pop Up Dinamis Beserta Isinya
 function setupModalDinamis(title, sheetName, actionType, headers, rowData = null) {
     document.getElementById('modal-title').innerText = title;
     document.getElementById('modal-sheet-name').value = sheetName;
@@ -47,7 +47,7 @@ function setupModalDinamis(title, sheetName, actionType, headers, rowData = null
         
         const value = rowData ? (rowData[header] !== undefined ? rowData[header] : "") : "";
         
-        // Penentuan kelas css & status readonly
+        // Penentuan kelas css & status readonly untuk kolom ID kunci utama saat update
         let inputClassAttr = "";
         if (index === 0 && actionType === "update") {
             inputClassAttr = "readonly class='w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-400 outline-none'";
@@ -142,43 +142,3 @@ function refreshCurrentActiveMenu() {
     else if (currentActiveMenu === 'keuangan') fetchKeuangan();
     else if (currentActiveMenu === 'dashboard' && typeof fetchDashboard === 'function') fetchDashboard();
 }
-
-// ===================================================================
-// BRIDGE TRIGGER UNTUK TOMBOL TAMBAH DATA (CREATE) - SESUAI SPREADSHEET
-// ===================================================================
-
-// 1. Tambah Siswa (Sheet: Data Siswa)
-window.openCreateSiswa = function() {
-    const headersSiswa = ["ID Siswa", "Nama Siswa", "Alamat", "No. WA", "Harga Paket Bimbel"]; 
-    setupModalDinamis("Tambah Siswa Baru", "Data Siswa", "create", headersSiswa);
-};
-
-// 2. Tambah Tentor (Sheet: Data Tentor)
-window.openCreateTentor = function() {
-    const headersTentor = ["ID Tentor", "Nama Tentor", "Alamat", "No. WA", "Gaji Per Jam", "Username", "Password"]; 
-    setupModalDinamis("Tambah Tentor Baru", "Data Tentor", "create", headersTentor);
-};
-
-// 3. Tambah Jurnal Mengajar (Sheet: Jurnal)
-window.openCreateJurnal = function() {
-    const headersJurnal = ["ID Jurnal", "Tanggal", "Nama Siswa", "Nama Tentor", "Mata Pelajaran", "Materi", "Durasi", "Catatan"]; 
-    setupModalDinamis("Tambah Jurnal Mengajar", "Jurnal", "create", headersJurnal);
-};
-
-// 4. Tambah Invoice Pembayaran Siswa (Sheet: Invoice)
-window.openCreateInvoice = function() {
-    const headersInvoice = ["ID Invoice", "Bulan/Tahun", "Nama Siswa", "Jumlah Pertemuan", "Total Durasi", "Jumlah Pembayaran", "Status"]; 
-    setupModalDinamis("Buat Invoice Baru", "Invoice", "create", headersInvoice);
-};
-
-// 5. Tambah Slip Gaji Tentor (Sheet: Slip Gaji)
-window.openCreateSlipgaji = function() {
-    const headersSlip = ["ID Slip", "Bulan/Tahun", "Nama Tentor", "Total Durasi", "Gaji Pokok", "Status"]; 
-    setupModalDinamis("Buat Slip Gaji Baru", "Slip Gaji", "create", headersSlip);
-};
-
-// 6. Catat Transaksi Buku Kas Keuangan (Sheet: Laporan Keuangan)
-window.openCreateKeuangan = function() {
-    const headersKeuangan = ["ID Transaksi", "Tanggal", "Keterangan", "Tipe", "Jumlah"]; 
-    setupModalDinamis("Catat Transaksi Baru", "Laporan Keuangan", "create", headersKeuangan);
-};
