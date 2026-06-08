@@ -103,62 +103,16 @@
                 <div class="flex justify-between items-center"><h3 class="text-sm font-bold text-slate-700">Database Data Siswa</h3><button onclick="openCreateSiswa()" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Tambah Siswa</button></div>
                 <div id="container-siswa" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
             </section>
+
             <section id="content-tentor" class="content-section hidden space-y-4">
                 <div class="flex justify-between items-center"><h3 class="text-sm font-bold text-slate-700">Database Data Tentor</h3><button onclick="openCreateTentor()" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Tambah Tentor</button></div>
                 <div id="container-tentor" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
             </section>
+
             <section id="content-jurnal" class="content-section hidden space-y-4">
                 <div class="flex justify-between items-center"><h3 class="text-sm font-bold text-slate-700">Database Jurnal Mengajar</h3><button onclick="openCreateJurnal()" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Tambah Jurnal</button></div>
                 <div id="container-jurnal" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
             </section>
+
             <section id="content-invoice" class="content-section hidden space-y-4">
-                <div class="flex justify-between items-center"><h3 class="text-sm font-bold text-slate-700">Database Invoice Pembayaran Siswa</h3><button onclick="openCreateInvoice()" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Buat Invoice</button></div>
-                <div id="container-invoice" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
-            </section>
-            <section id="content-slipgaji" class="content-section hidden space-y-4">
-                <div class="flex justify-between items-center"><h3 class="text-sm font-bold text-slate-700">Database Slip Gaji Tentor</h3><button onclick="openCreateSlipgaji()" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Buat Slip Gaji</button></div>
-                <div id="container-slipgaji" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
-            </section>
-            <section id="content-keuangan" class="content-section hidden space-y-4">
-                <div class="flex justify-between items-center"><h3 class="text-sm font-bold text-slate-700">Database Catatan Buku Kas Keuangan</h3><button onclick="openCreateKeuangan()" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Catat Transaksi</button></div>
-                <div id="container-keuangan" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
-            </section>
-            <section id="content-usermanage" class="content-section hidden space-y-4">
-                <div><h3 class="text-sm font-bold text-slate-700">Manajemen Akses Login</h3><p class="text-[11px] text-slate-400">Gunakan tombol ubah (pensil) pada nama tentor di bawah ini untuk mengatur akun login milik tentor.</p></div>
-                <div id="container-usermanage" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto"></div>
-            </section>
-        </main>
-    </div>
-
-    <div id="crud-modal" class="hidden-system fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-        <div class="bg-white w-full max-w-lg rounded-2xl border border-slate-100 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                <h3 id="modal-title" class="text-xs font-bold text-slate-700">Kelola Data</h3>
-                <button onclick="closeCrudModal()" class="text-slate-400 hover:text-slate-600 text-sm cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form id="crud-form" class="flex flex-col flex-1 overflow-hidden">
-                <input type="hidden" id="modal-sheet-name">
-                <input type="hidden" id="modal-action-type">
-                <input type="hidden" id="modal-id">
-                <div id="modal-fields-container" class="p-6 space-y-4 overflow-y-auto flex-1"></div>
-                <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-end gap-2.5">
-                    <button type="button" onclick="closeCrudModal()" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 font-medium hover:bg-slate-50 cursor-pointer">Batal</button>
-                    <button type="submit" id="btn-save-crud" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-medium cursor-pointer">Simpan Data</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-   <script src="auth.js"></script>
-    <script src="crud-helper.js"></script>
-    <script src="dashboard.js"></script>
-    <script src="menu-siswa.js"></script>
-    <script src="menu-tentor.js"></script>
-    <script src="menu-jurnal.js"></script>
-    <script src="menu-invoice.js"></script>
-    <script src="menu-slipgaji.js"></script>
-    <script src="menu-keuangan.js"></script>
-</body>
-</html>
-</body>
-</html>
+                <div class="flex justify-between items-center"><h3 class="text-sm font-bold text-slate-700">Database Invoice Pembayaran Siswa</h3><button onclick="openCreateInvoice()" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"><i class="fa-solid fa-plus"></i> Buat Invoice
