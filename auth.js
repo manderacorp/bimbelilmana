@@ -80,7 +80,7 @@ function showMainPage(role) {
     }
 }
 
-// Router SPA Ganti Menu Halaman Sidebar (STRUKTUR SUDAH DIPERBAIKI SINKRON)
+// Router SPA Ganti Menu Halaman Sidebar (STRUKTUR SINKRON & AMAN)
 navItems.forEach(item => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
@@ -129,9 +129,7 @@ navItems.forEach(item => {
     });
 });
 
-// Utilitas Global Format Mata Uang Rupiah
+// Utilitas Global Format Mata Uang Rupiah (SUDAH BERSIH)
 function formatIDR(num) {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
-}
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
 }
