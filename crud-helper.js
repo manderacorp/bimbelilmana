@@ -1,3 +1,5 @@
+// SIM Admin Bimbel Ilmana - Core CRUD Helper System
+
 // Fungsi Global Render Tabel dari File Menu Terpisah
 function renderTableModular(container, res, headers, sheetName) {
     if (res.status === 'success' && res.data && res.data.length > 0) {
@@ -29,7 +31,7 @@ function renderTableModular(container, res, headers, sheetName) {
     }
 }
 
-// Logic Pembentukan Struktur Form Pop Up Dinamis Beserta Isinya
+// Logic Pembentukan Struktur Form Pop Up Dinamis Beserta Isinya (SUDAH DIPERBAIKI)
 function setupModalDinamis(title, sheetName, actionType, headers, rowData = null) {
     document.getElementById('modal-title').innerText = title;
     document.getElementById('modal-sheet-name').value = sheetName;
@@ -40,16 +42,25 @@ function setupModalDinamis(title, sheetName, actionType, headers, rowData = null
     container.innerHTML = "";
 
     headers.forEach((header, index) => {
-        if (index === 0 && actionType === "create") return; // Sembunyikan kolom ID jika tambah data baru (karena ID auto-generate di GAS)
+        // Sembunyikan kolom ID jika tambah data baru (karena ID auto-generate di GAS)
+        if (index === 0 && actionType === "create") return; 
         
         const value = rowData ? (rowData[header] !== undefined ? rowData[header] : "") : "";
-        const isReadOnly = (index === 0 && actionType === "update") ? "readonly class='w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-400 outline-none'" : "class='w-full px-3 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500'";
+        
+        // Penentuan kelas css & status readonly
+        let inputClassAttr = "";
+        if (index === 0 && actionType === "update") {
+            inputClassAttr = "readonly class='w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-400 outline-none'";
+        } else {
+            inputClassAttr = "class='w-full px-3 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500'";
+        }
+        
         const inputType = /password/i.test(header) ? 'password' : (/tanggal|bulan/i.test(header) ? 'date' : 'text');
 
         container.innerHTML += `<div>
             <label class="block text-xs font-semibold text-slate-600 mb-1 capitalize">${header}</label>
-            <input type="${inputType}" name="${header}" value="${value}" ${isReadOnly} required>`;
-        container.innerHTML += `</div>`;
+            <input type="${inputType}" name="${header}" value="${value}" ${inputClassAttr} required>
+        </div>`;
     });
 
     document.getElementById('crud-modal').classList.remove('hidden-system');
