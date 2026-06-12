@@ -19,19 +19,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Logika Perpindahan Menu Navigasi (Tetap Dipertahankan)
+// Logika Perpindahan Menu Navigasi
 navItems.forEach(item => {
-    item.addEventListener('click', () => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
         const target = item.getAttribute('data-target');
         
-        navItems.forEach(nav => nav.classList.remove('bg-indigo-700', 'text-white'));
-        navItems.forEach(nav => nav.classList.add('text-indigo-100', 'hover:bg-indigo-800'));
+        // Atur style menu yang aktif
+        navItems.forEach(nav => {
+            nav.classList.remove('bg-indigo-700', 'text-white', 'font-medium');
+            nav.classList.add('text-indigo-100', 'hover:bg-indigo-800');
+        });
         
         item.classList.remove('text-indigo-100', 'hover:bg-indigo-800');
-        item.classList.add('bg-indigo-700', 'text-white');
+        item.classList.add('bg-indigo-700', 'text-white', 'font-medium');
 
+        // Sembunyikan semua section
         contentSections.forEach(section => section.classList.add('hidden'));
         
+        // Tampilkan section target
         const targetSection = document.getElementById(`content-${target}`);
         if (targetSection) targetSection.classList.remove('hidden');
 
@@ -68,7 +74,10 @@ navItems.forEach(item => {
     });
 });
 
-// Utilitas Global Format Mata Uang Rupiah (Tetap Dipertahankan)
+// Utilitas Global Format Mata Uang Rupiah (Penyelamat Ekosistem Data)
 function formatIDR(num) {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    if (num === null || num === undefined) return 'Rp 0';
+    const number = Number(num);
+    if (isNaN(number)) return num;
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
 }
