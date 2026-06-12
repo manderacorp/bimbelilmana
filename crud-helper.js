@@ -3,32 +3,32 @@
 // Fungsi Global Render Tabel dari File Menu Terpisah
 function renderTableModular(container, res, headers, sheetName) {
     if (res.status === 'success' && res.data && res.data.length > 0) {
-        let tableHTML = `<table class=\"w-full text-left text-xs text-slate-600 border border-slate-100 rounded-lg overflow-hidden\"><thead class=\"bg-slate-50 text-slate-500\"><tr>`;
-        headers.forEach(h => tableHTML += `<th class=\"px-4 py-3 capitalize\">${h}</th>`);
-        tableHTML += `<th class=\"px-4 py-3 text-center\">Aksi</th></tr></thead><tbody class=\"divide-y divide-slate-100\">`;
+        let tableHTML = `<table class="w-full text-left text-xs text-slate-600 border border-slate-100 rounded-lg overflow-hidden"><thead class="bg-slate-50 text-slate-500"><tr>`;
+        headers.forEach(h => tableHTML += `<th class="px-4 py-3 capitalize">${h}</th>`);
+        tableHTML += `<th class="px-4 py-3 text-center">Aksi</th></tr></thead><tbody class="divide-y divide-slate-100">`;
 
         res.data.forEach(row => {
-            tableHTML += `<tr class=\"hover:bg-slate-50\">`;
+            tableHTML += `<tr class="hover:bg-slate-50">`;
             headers.forEach(h => {
                 let val = row[h] !== undefined && row[h] !== null ? row[h] : "-";
                 if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan/i.test(h)) val = formatIDR(val);
-                tableHTML += `<td class=\"px-4 py-3\">${val}</td>`;
+                tableHTML += `<td class="px-4 py-3">${val}</td>`;
             });
 
             const idKey = headers[0];
             const idValue = row[idKey] ? row[idKey].toString().replace(/'/g, "\\'") : "";
             const rowEscaped = btoa(encodeURIComponent(JSON.stringify(row)));
             
-            tableHTML += `<td class=\"px-4 py-3 text-center flex items-center justify-center gap-2\">
-                <button onclick=\"openUpdateCrud('${sheetName}', '${rowEscaped}')\" class=\"p-1 text-amber-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-all cursor-pointer\"><i class=\"fa-solid fa-pen-to-square\"></i></button>
-                <button onclick=\"hapusDataCrud('${sheetName}', '${idValue}')\" class=\"p-1 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all cursor-pointer\"><i class=\"fa-solid fa-trash-can\"></i></button>
+            tableHTML += `<td class="px-4 py-3 text-center flex items-center justify-center gap-2">
+                <button onclick="openUpdateCrud('${sheetName}', '${rowEscaped}')" class="p-1 text-amber-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-all cursor-pointer"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="hapusDataCrud('${sheetName}', '${idValue}')" class="p-1 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
             </td></tr>`;
         });
 
         tableHTML += `</tbody></table>`;
         container.innerHTML = tableHTML;
     } else {
-        container.innerHTML = `<div class=\"text-xs text-slate-400 py-8 text-center\"><i class=\"fa-solid fa-folder-open text-2xl mb-2 block text-slate-300\"></i> Belum ada data di sheet ${sheetName}.</div>`;
+        container.innerHTML = `<div class="text-xs text-slate-400 py-8 text-center"><i class="fa-solid fa-folder-open text-2xl mb-2 block text-slate-300"></i> Belum ada data di sheet ${sheetName}.</div>`;
     }
 }
 
@@ -60,6 +60,11 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
     const butuhSiswa = headers.some(h => h.toLowerCase().includes('siswa'));
     const butuhTentor = headers.some(h => h.toLowerCase().includes('tentor'));
 
+    // Tampilkan teks loading sementara di dalam form jika sedang mengambil data
+    if (butuhSiswa || butuhTentor) {
+        container.innerHTML = `<div class="text-center py-4 text-slate-400 col-span-full"><i class="fa-solid fa-circle-notch animate-spin mr-2 text-indigo-500"></i>Menghubungkan ke database database...</div>`;
+    }
+
     // Ambil data real-time jika form membutuhkannya (Sesuai dengan doGet Code.gs)
     if (butuhSiswa) {
         try {
@@ -76,6 +81,9 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
             if (json.status === 'success' && json.data) opsiTentor = json.data;
         } catch (e) { console.error("Gagal memuat opsi tentor", e); }
     }
+
+    // Bersihkan kembali kontainer setelah data selesai di-fetch
+    container.innerHTML = '';
 
     // 2. Render field input atau dropdown secara dinamis
     headers.forEach((header, index) => {
@@ -108,6 +116,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
 
             opsiSiswa.forEach(s => {
                 const opt = document.createElement('option');
+                // Mengambil nilai "Nama Siswa" dari baris data objek spreadsheet
                 const namaSiswa = s["Nama Siswa"] || s["Nama"] || Object.values(s)[1]; 
                 opt.value = namaSiswa;
                 opt.innerText = namaSiswa;
@@ -128,6 +137,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
 
             opsiTentor.forEach(t => {
                 const opt = document.createElement('option');
+                // Mengambil nilai "Nama Tentor" dari baris data objek spreadsheet
                 const namaTentor = t["Nama Tentor"] || t["Nama"] || Object.values(t)[1];
                 opt.value = namaTentor;
                 opt.innerText = namaTentor;
@@ -145,8 +155,10 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
             if (index === 0 && actionType === 'update') {
                 inputElement.readOnly = true;
                 inputElement.className += ' bg-slate-100 text-slate-400 cursor-not-allowed';
-            } else if (lowerHeader.includes('tanggal')) {
-                inputElement.type = 'date';
+            } else if (lowerHeader.includes('tanggal') || lowerHeader.includes('bulan')) {
+                // Jika kolom berisi kata "tanggal" atau "bulan/tahun" kita buat tipe text/date yang sesuai
+                inputElement.type = lowerHeader.includes('tanggal') ? 'date' : 'text';
+                if(lowerHeader.includes('bulan')) inputElement.placeholder = "Contoh: Juni 2026";
             } else if (/harga|gaji|pembayaran|jumlah|tagihan|durasi|pertemuan/i.test(lowerHeader)) {
                 inputElement.type = 'number';
             } else {
@@ -210,8 +222,12 @@ document.getElementById('crud-form').addEventListener('submit', async (e) => {
             // Muat ulang menu aktif saat ini agar perubahan data langsung terlihat
             if (typeof window[`fetch${sheetName.replace(/\s+/g, '')}`] === 'function') {
                 window[`fetch${sheetName.replace(/\s+/g, '')}`]();
-            } else if (currentActiveMenu === 'usermanage' && typeof fetchTentor === 'function') {
-                navItems[7].click();
+            } else if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') {
+                fetchSiswa();
+            } else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') {
+                fetchTentor();
+            } else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') {
+                fetchKeuangan();
             } else {
                 location.reload();
             }
@@ -248,6 +264,12 @@ window.hapusDataCrud = async function(sheetName, idValue) {
             alert(json.message);
             if (typeof window[`fetch${sheetName.replace(/\s+/g, '')}`] === 'function') {
                 window[`fetch${sheetName.replace(/\s+/g, '')}`]();
+            } else if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') {
+                fetchSiswa();
+            } else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') {
+                fetchTentor();
+            } else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') {
+                fetchKeuangan();
             } else {
                 location.reload();
             }
@@ -259,10 +281,12 @@ window.hapusDataCrud = async function(sheetName, idValue) {
     }
 };
 
-// Pemicu Tombol Tambah Bawaan Masing-Masing Menu
-window.openCreateSiswa = function() { setupModalDinamis("Tambah Siswa Baru", "Data Siswa", "create", ["ID", "Nama Siswa", "Kelas", "No HP Orang Tua", "Alamat", "Status Paket"]); };
-window.openCreateTentor = function() { setupModalDinamis("Tambah Tentor Baru", "Data Tentor", "create", ["ID", "Nama Tentor", "Keahlian", "No HP", "Username", "Password"]); };
-window.openCreateJurnal = function() { setupModalDinamis("Tambah Jurnal Mengajar", "Jurnal", "create", ["ID", "Tanggal", "Nama Tentor", "Nama Siswa", "Materi", "Durasi (Menit)"]); };
-window.openCreateInvoice = function() { setupModalDinamis("Buat Invoice Baru", "Invoice", "create", ["ID Invoice", "Tanggal", "Nama Siswa", "Total Tagihan", "Status Pembayaran"]); };
-window.openCreateSlipgaji = function() { setupModalDinamis("Buat Slip Gaji Tentor", "Slip Gaji", "create", ["ID Slip", "Bulan", "Nama Tentor", "Gaji Pokok", "Bonus", "Total Diterima"]); };
+// =========================================================================
+// PEMICU TOMBOL TAMBAH (SUDAH DISINKRONKAN TOTAL DENGAN HEADER SPREADSHEET)
+// =========================================================================
+window.openCreateSiswa = function() { setupModalDinamis("Tambah Siswa Baru", "Data Siswa", "create", ["ID Siswa", "Nama Siswa", "Alamat", "No. WA", "Harga Paket Bimbel"]); };
+window.openCreateTentor = function() { setupModalDinamis("Tambah Tentor Baru", "Data Tentor", "create", ["ID Tentor", "Nama Tentor", "Alamat", "No. WA", "Gaji Per Jam", "Username", "Password"]); };
+window.openCreateJurnal = function() { setupModalDinamis("Tambah Jurnal Mengajar", "Jurnal", "create", ["ID Jurnal", "Tanggal", "Nama Siswa", "Nama Tentor", "Mata Pelajaran", "Materi", "Durasi", "Catatan"]); };
+window.openCreateInvoice = function() { setupModalDinamis("Buat Invoice Baru", "Invoice", "create", ["ID Invoice", "Bulan/Tahun", "Nama Siswa", "Jumlah Pertemuan", "Total Durasi", "Jumlah Pembayaran", "Status"]); };
+window.openCreateSlipgaji = function() { setupModalDinamis("Buat Slip Gaji Tentor", "Slip Gaji", "create", ["ID Slip", "Bulan/Tahun", "Nama Tentor", "Total Durasi", "Gaji Pokok", "Status"]); };
 window.openCreateKeuangan = function() { setupModalDinamis("Catat Transaksi Keuangan Baru", "Laporan Keuangan", "create", ["ID Transaksi", "Tanggal", "Keterangan", "Tipe", "Jumlah"]); };
