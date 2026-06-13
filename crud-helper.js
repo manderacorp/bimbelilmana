@@ -11,7 +11,7 @@ function renderTableModular(container, res, headers, sheetName) {
             tableHTML += `<tr class="hover:bg-slate-50">`;
             headers.forEach(h => {
                 let val = row[h] !== undefined && row[h] !== null ? row[h] : "-";
-                if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan/i.test(h)) val = formatIDR(val);
+                if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|total/i.test(h)) val = formatIDR(val);
                 tableHTML += `<td class="px-4 py-3">${val}</td>`;
             });
 
@@ -32,7 +32,7 @@ function renderTableModular(container, res, headers, sheetName) {
     }
 }
 
-// FUNGSI UTAMA: PEMBUAT MODAL DINAMIS DENGAN DROPDOWN LIST OTOMATIS
+// FUNGSI UTAMA: PEMBUAT MODAL DINAMIS DENGAN KONTROL DROPDOWN SELEKTIF
 window.setupModalDinamis = async function(title, sheetName, actionType, headers, activeRowData = null) {
     const modal = document.getElementById('crud-modal');
     const modalTitle = document.getElementById('modal-title');
@@ -52,20 +52,20 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
         modalId.value = '';
     }
 
-    // 1. Siapkan kontainer penampung opsi dari database
     let opsiSiswa = [];
     let opsiTentor = [];
 
-    // Deteksi kebutuhan dropdown berdasarkan nama header kolom form
-    const butuhSiswa = headers.some(h => h.toLowerCase().includes('siswa'));
-    const butuhTentor = headers.some(h => h.toLowerCase().includes('tentor'));
+    // KUNCI ATURAN: Dropdown hanya boleh aktif di sheet Jurnal, Invoice, dan Slip Gaji
+    const bolehDropdown = ["Jurnal", "Invoice", "Slip Gaji"].includes(sheetName);
+    
+    const butuhSiswa = bolehDropdown && headers.some(h => h.toLowerCase().includes('siswa'));
+    const butuhTentor = bolehDropdown && headers.some(h => h.toLowerCase().includes('tentor'));
 
-    // Tampilkan teks loading sementara di dalam form jika sedang mengambil data
+    // Tampilkan loading jika sistem sedang memuat opsi database
     if (butuhSiswa || butuhTentor) {
-        container.innerHTML = `<div class="text-center py-4 text-slate-400 col-span-full"><i class="fa-solid fa-circle-notch animate-spin mr-2 text-indigo-500"></i>Menghubungkan ke database database...</div>`;
+        container.innerHTML = `<div class="text-center py-4 text-slate-400 col-span-full"><i class="fa-solid fa-circle-notch animate-spin mr-2 text-indigo-500"></i>Menghubungkan ke database...</div>`;
     }
 
-    // Ambil data real-time jika form membutuhkannya (Sesuai dengan doGet Code.gs)
     if (butuhSiswa) {
         try {
             const res = await fetch(`${API_URL}?action=getDataSiswa`);
@@ -82,32 +82,31 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
         } catch (e) { console.error("Gagal memuat opsi tentor", e); }
     }
 
-    // Bersihkan kembali kontainer setelah data selesai di-fetch
     container.innerHTML = '';
 
-    // 2. Render field input atau dropdown secara dinamis
+    // Render Field Secara Dinamis
     headers.forEach((header, index) => {
         const lowerHeader = header.toLowerCase();
         
-        // Lewati kolom ID jika sedang membuat data baru (karena di-generate UUID otomatis oleh Apps Script)
+        // Lewati ID Utama pada mode create karena otomatis di sisi Apps Script
         if (index === 0 && actionType === 'create') return;
 
         const div = document.createElement('div');
         div.className = 'flex flex-col gap-1';
 
         const label = document.createElement('label');
-        label.className = 'font-semibold text-slate-600';
+        label.className = 'font-semibold text-slate-600 text-xs';
         label.innerText = header;
         div.appendChild(label);
 
         let inputElement;
         const currentVal = (actionType === 'update' && activeRowData) ? activeRowData[header] : '';
 
-        // OPSI A: JIKA KOLOM ADALAH NAMA SISWA -> JADI DROPDOWN
-        if (lowerHeader.includes('siswa')) {
+        // KONDISI 1: DROPDOWN NAMA SISWA (HANYA UNTUK MENU JURNAL / INVOICE)
+        if (lowerHeader.includes('siswa') && bolehDropdown) {
             inputElement = document.createElement('select');
             inputElement.name = header;
-            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-indigo-500';
+            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl bg-white text-xs focus:outline-none focus:border-indigo-500';
             
             const defaultOpt = document.createElement('option');
             defaultOpt.value = '';
@@ -116,7 +115,6 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
 
             opsiSiswa.forEach(s => {
                 const opt = document.createElement('option');
-                // Mengambil nilai "Nama Siswa" dari baris data objek spreadsheet
                 const namaSiswa = s["Nama Siswa"] || s["Nama"] || Object.values(s)[1]; 
                 opt.value = namaSiswa;
                 opt.innerText = namaSiswa;
@@ -124,11 +122,11 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
                 inputElement.appendChild(opt);
             });
         }
-        // OPSI B: JIKA KOLOM ADALAH NAMA TENTOR -> JADI DROPDOWN
-        else if (lowerHeader.includes('tentor')) {
+        // KONDISI 2: DROPDOWN NAMA TENTOR (HANYA UNTUK MENU JURNAL / SLIP GAJI)
+        else if (lowerHeader.includes('tentor') && bolehDropdown) {
             inputElement = document.createElement('select');
             inputElement.name = header;
-            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-indigo-500';
+            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl bg-white text-xs focus:outline-none focus:border-indigo-500';
 
             const defaultOpt = document.createElement('option');
             defaultOpt.value = '';
@@ -137,7 +135,6 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
 
             opsiTentor.forEach(t => {
                 const opt = document.createElement('option');
-                // Mengambil nilai "Nama Tentor" dari baris data objek spreadsheet
                 const namaTentor = t["Nama Tentor"] || t["Nama"] || Object.values(t)[1];
                 opt.value = namaTentor;
                 opt.innerText = namaTentor;
@@ -145,148 +142,4 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
                 inputElement.appendChild(opt);
             });
         }
-        // OPSI C: INPUT STANDAR (TEKS, ANGKA, TANGGAL)
-        else {
-            inputElement = document.createElement('input');
-            inputElement.name = header;
-            inputElement.value = currentVal;
-            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500';
-
-            if (index === 0 && actionType === 'update') {
-                inputElement.readOnly = true;
-                inputElement.className += ' bg-slate-100 text-slate-400 cursor-not-allowed';
-            } else if (lowerHeader.includes('tanggal') || lowerHeader.includes('bulan')) {
-                // Jika kolom berisi kata "tanggal" atau "bulan/tahun" kita buat tipe text/date yang sesuai
-                inputElement.type = lowerHeader.includes('tanggal') ? 'date' : 'text';
-                if(lowerHeader.includes('bulan')) inputElement.placeholder = "Contoh: Juni 2026";
-            } else if (/harga|gaji|pembayaran|jumlah|tagihan|durasi|pertemuan/i.test(lowerHeader)) {
-                inputElement.type = 'number';
-            } else {
-                inputElement.type = 'text';
-            }
-        }
-
-        inputElement.required = true;
-        div.appendChild(inputElement);
-        container.appendChild(div);
-    });
-
-    modal.classList.remove('hidden-system');
-};
-
-// Fungsi Membuka Modal Mode Edit Data
-window.openUpdateCrud = function(sheetName, rowEscaped) {
-    const rowData = JSON.parse(decodeURIComponent(atob(rowEscaped)));
-    const headers = Object.keys(rowData);
-    setupModalDinamis(`Edit Data ${sheetName}`, sheetName, "update", headers, rowData);
-};
-
-// Fungsi Menutup Modal
-window.closeCrudModal = function() {
-    document.getElementById('crud-modal').classList.add('hidden-system');
-    document.getElementById('crud-form').reset();
-};
-
-// PROSES SUBMIT: EKSEKUSI ADD / EDIT DATA KE WEB APP GAS
-document.getElementById('crud-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btnSave = document.getElementById('btn-save-crud');
-    const sheetName = document.getElementById('modal-sheet-name').value;
-    const actionType = document.getElementById('modal-action-type').value;
-    const idValue = document.getElementById('modal-id').value;
-    
-    const formData = {};
-    const inputs = e.target.querySelectorAll('input[name], select[name]');
-    inputs.forEach(input => formData[input.name] = input.value);
-
-    btnSave.disabled = true;
-    btnSave.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Menyimpan...`;
-
-    try {
-        const payload = {
-            action: actionType,
-            sheetName: sheetName,
-            id: idValue,
-            formData: formData
-        };
-
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-        const json = await res.json();
-
-        if (json.status === 'success') {
-            alert(json.message);
-            closeCrudModal();
-            // Muat ulang menu aktif saat ini agar perubahan data langsung terlihat
-            if (typeof window[`fetch${sheetName.replace(/\s+/g, '')}`] === 'function') {
-                window[`fetch${sheetName.replace(/\s+/g, '')}`]();
-            } else if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') {
-                fetchSiswa();
-            } else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') {
-                fetchTentor();
-            } else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') {
-                fetchKeuangan();
-            } else {
-                location.reload();
-            }
-        } else {
-            alert("Gagal: " + json.message);
-        }
-    } catch (err) {
-        alert("Terjadi kesalahan jaringan.");
-        console.error(err);
-    } finally {
-        btnSave.disabled = false;
-        btnSave.innerHTML = `Simpan Data`;
-    }
-});
-
-// PROSES DELETE: HAPUS DATA DARI WEB APP GAS
-window.hapusDataCrud = async function(sheetName, idValue) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus data dengan ID: ${idValue}?`)) return;
-
-    try {
-        const payload = {
-            action: 'delete',
-            sheetName: sheetName,
-            id: idValue
-        };
-
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-        const json = await res.json();
-
-        if (json.status === 'success') {
-            alert(json.message);
-            if (typeof window[`fetch${sheetName.replace(/\s+/g, '')}`] === 'function') {
-                window[`fetch${sheetName.replace(/\s+/g, '')}`]();
-            } else if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') {
-                fetchSiswa();
-            } else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') {
-                fetchTentor();
-            } else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') {
-                fetchKeuangan();
-            } else {
-                location.reload();
-            }
-        } else {
-            alert("Gagal menghapus: " + json.message);
-        }
-    } catch (err) {
-        alert("Gagal terhubung ke server.");
-    }
-};
-
-// =========================================================================
-// PEMICU TOMBOL TAMBAH (SUDAH DISINKRONKAN TOTAL DENGAN HEADER SPREADSHEET)
-// =========================================================================
-window.openCreateSiswa = function() { setupModalDinamis("Tambah Siswa Baru", "Data Siswa", "create", ["ID Siswa", "Nama Siswa", "Alamat", "No. WA", "Harga Paket Bimbel"]); };
-window.openCreateTentor = function() { setupModalDinamis("Tambah Tentor Baru", "Data Tentor", "create", ["ID Tentor", "Nama Tentor", "Alamat", "No. WA", "Gaji Per Jam", "Username", "Password"]); };
-window.openCreateJurnal = function() { setupModalDinamis("Tambah Jurnal Mengajar", "Jurnal", "create", ["ID Jurnal", "Tanggal", "Nama Siswa", "Nama Tentor", "Mata Pelajaran", "Materi", "Durasi", "Catatan"]); };
-window.openCreateInvoice = function() { setupModalDinamis("Buat Invoice Baru", "Invoice", "create", ["ID Invoice", "Bulan/Tahun", "Nama Siswa", "Jumlah Pertemuan", "Total Durasi", "Jumlah Pembayaran", "Status"]); };
-window.openCreateSlipgaji = function() { setupModalDinamis("Buat Slip Gaji Tentor", "Slip Gaji", "create", ["ID Slip", "Bulan/Tahun", "Nama Tentor", "Total Durasi", "Gaji Pokok", "Status"]); };
-window.openCreateKeuangan = function() { setupModalDinamis("Catat Transaksi Keuangan Baru", "Laporan Keuangan", "create", ["ID Transaksi", "Tanggal", "Keterangan", "Tipe", "Jumlah"]); };
+        // KONDISI 3: INPUT BIASA (JIKA BUKAN MENU DI
