@@ -142,4 +142,144 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
                 inputElement.appendChild(opt);
             });
         }
-        // KONDISI 3: INPUT BIASA (JIKA BUKAN MENU DI
+        // KONDISI 3: INPUT BIASA (JIKA BUKAN MENU DI ATAS, TERMASUK INPUT SISWA & TENTOR BARU)
+        else {
+            inputElement = document.createElement('input');
+            inputElement.name = header;
+            inputElement.value = currentVal;
+            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500';
+
+            if (index === 0 && actionType === 'update') {
+                inputElement.readOnly = true;
+                inputElement.className += ' bg-slate-100 text-slate-400 cursor-not-allowed';
+            } else if (lowerHeader.includes('tanggal')) {
+                inputElement.type = 'date';
+            } else if (/harga|gaji|pembayaran|jumlah|tagihan|durasi/i.test(lowerHeader)) {
+                inputElement.type = 'number';
+            } else {
+                inputElement.type = 'text';
+            }
+        }
+
+        inputElement.required = true;
+        div.appendChild(inputElement);
+        container.appendChild(div);
+    });
+
+    modal.classList.remove('hidden-system');
+};
+
+// Fungsi Membuka Modal Mode Edit Data
+window.openUpdateCrud = function(sheetName, rowEscaped) {
+    const rowData = JSON.parse(decodeURIComponent(atob(rowEscaped)));
+    const headers = Object.keys(rowData);
+    setupModalDinamis(`Edit Data ${sheetName}`, sheetName, "update", headers, rowData);
+};
+
+// Fungsi Menutup Modal
+window.closeCrudModal = function() {
+    document.getElementById('crud-modal').classList.add('hidden-system');
+    document.getElementById('crud-form').reset();
+};
+
+// PROSES SUBMIT: EKSEKUSI ADD / EDIT DATA KE WEB APP GAS
+document.getElementById('crud-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btnSave = document.getElementById('btn-save-crud');
+    const sheetName = document.getElementById('modal-sheet-name').value;
+    const actionType = document.getElementById('modal-action-type').value;
+    const idValue = document.getElementById('modal-id').value;
+    
+    const formData = {};
+    const inputs = e.target.querySelectorAll('input[name], select[name]');
+    inputs.forEach(input => formData[input.name] = input.value);
+
+    btnSave.disabled = true;
+    btnSave.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Menyimpan...`;
+
+    try {
+        const payload = {
+            action: actionType,
+            sheetName: sheetName,
+            id: idValue,
+            formData: formData
+        };
+
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+
+        if (json.status === 'success') {
+            alert(json.message);
+            closeCrudModal();
+            
+            if (typeof window[`fetch${sheetName.replace(/\s+/g, '')}`] === 'function') {
+                window[`fetch${sheetName.replace(/\s+/g, '')}`]();
+            } else if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') {
+                fetchSiswa();
+            } else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') {
+                fetchTentor();
+            } else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') {
+                fetchKeuangan();
+            } else {
+                location.reload();
+            }
+        } else {
+            alert("Gagal: " + json.message);
+        }
+    } catch (err) {
+        alert("Terjadi kesalahan jaringan.");
+        console.error(err);
+    } finally {
+        btnSave.disabled = false;
+        btnSave.innerHTML = `Simpan Data`;
+    }
+});
+
+// PROSES DELETE: HAPUS DATA DARI WEB APP GAS
+window.hapusDataCrud = async function(sheetName, idValue) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus data dengan ID: ${idValue}?`)) return;
+
+    try {
+        const payload = {
+            action: 'delete',
+            sheetName: sheetName,
+            id: idValue
+        };
+
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+
+        if (json.status === 'success') {
+            alert(json.message);
+            if (typeof window[`fetch${sheetName.replace(/\s+/g, '')}`] === 'function') {
+                window[`fetch${sheetName.replace(/\s+/g, '')}`]();
+            } else if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') {
+                fetchSiswa();
+            } else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') {
+                fetchTentor();
+            } else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') {
+                fetchKeuangan();
+            } else {
+                location.reload();
+            }
+        } else {
+            alert("Gagal menghapus: " + json.message);
+        }
+    } catch (err) {
+        alert("Gagal terhubung ke server.");
+    }
+};
+
+// PEMICU TOMBOL TAMBAH BAWAAN DI MASING-MASING MENU MODULAR
+window.openCreateSiswa = function() { setupModalDinamis("Tambah Siswa Baru", "Data Siswa", "create", ["ID", "Nama Siswa", "Kelas", "No HP Orang Tua", "Alamat", "Status Paket"]); };
+window.openCreateTentor = function() { setupModalDinamis("Tambah Tentor Baru", "Data Tentor", "create", ["ID", "Nama Tentor", "Keahlian", "No HP", "Username", "Password"]); };
+window.openCreateJurnal = function() { setupModalDinamis("Tambah Jurnal Mengajar", "Jurnal", "create", ["ID", "Tanggal", "Nama Tentor", "Nama Siswa", "Materi", "Durasi (Menit)"]); };
+window.openCreateInvoice = function() { setupModalDinamis("Buat Invoice Baru", "Invoice", "create", ["ID Invoice", "Tanggal", "Nama Siswa", "Total Tagihan", "Status Pembayaran"]); };
+window.openCreateSlipgaji = function() { setupModalDinamis("Buat Slip Gaji Tentor", "Slip Gaji", "create", ["ID Slip", "Bulan", "Nama Tentor", "Gaji Pokok", "Bonus", "Total Diterima"]); };
+window.openCreateKeuangan = function() { setupModalDinamis("Catat Transaksi Keuangan Baru", "Laporan Keuangan", "create", ["ID Transaksi", "Tanggal", "Keterangan", "Tipe", "Jumlah"]); };
