@@ -1,5 +1,5 @@
-// Struktur kolom tetap: ID, Nama Siswa, Kelas, No HP Orang Tua, Alamat, Status Paket
-const HEADERS_SISWA = ["ID", "Nama Siswa", "Kelas", "No HP Orang Tua", "Alamat", "Status Paket"];
+// Sesuaikan dengan kolom Google Sheet: ID Siswa, Nama Siswa, Alamat, No. WA, Harga Paket Bimbel
+const HEADERS_SISWA = ["ID Siswa", "Nama Siswa", "Alamat", "No. WA", "Harga Paket Bimbel"];
 
 async function fetchSiswa() {
     currentActiveMenu = "siswa";
@@ -15,7 +15,6 @@ async function fetchSiswa() {
     }
 }
 
-// Override tombol tambah khusus siswa
 window.openCreateSiswa = function() {
     setupModalDinamis("Tambah Siswa Baru", "Data Siswa", "create", HEADERS_SISWA);
 };
