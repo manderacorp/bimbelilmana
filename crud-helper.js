@@ -66,15 +66,15 @@ window.openUpdateModular = function(sheetName, rowEscaped) {
 window.exportToJPG = function(sheetName, rowEscaped) {
     const row = JSON.parse(decodeURIComponent(atob(rowEscaped)));
 
-    // 1. Buat elemen area cetak khusus
+    // 1. Buat elemen kontainer area cetak khusus kuitansi
     const printContainer = document.createElement('div');
     printContainer.id = "area-cetak-sim-bimbel";
     
-    // Desain struktur kuitansi dengan CSS inline murni standar cetak print
+    // Desain cetakan kuitansi menggunakan CSS inline murni standar lama yang aman
     let isiKonten = `
-        <div style="width: 450px; margin: 0 auto; padding: 30px; background: #ffffff; color: #334155; box-sizing: border-box; font-family: Arial, sans-serif; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="width: 450px; margin: 40px auto; padding: 30px; background: #ffffff; color: #334155; box-sizing: border-box; font-family: Arial, sans-serif; border: 2px dashed #cbd5e1; border-radius: 8px;">
             <div style="text-align: center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 15px; margin-bottom: 20px;">
-                <h2 style="margin: 0; padding: 0; color: #4f46e5; font-size: 24px; font-weight: bold;">BIMBEL ILMANA</h2>
+                <h2 style="margin: 0; padding: 0; color: #4f46e5; font-size: 24px; font-weight: bold; tracking-spacing: 0.5px;">BIMBEL ILMANA</h2>
                 <p style="margin: 5px 0 0 0; padding: 0; font-size: 11px; color: #64748b;">Boyolali, Jawa Tengah | Cloud Admin System</p>
             </div>
             
@@ -87,6 +87,7 @@ window.exportToJPG = function(sheetName, rowEscaped) {
 
     Object.keys(row).forEach(key => {
         let val = row[key];
+        // Format otomatis jika mendeteksi angka finansial
         if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|pokok|bonus|diterima/i.test(key.toLowerCase())) {
             val = formatIDR(val);
         }
@@ -101,8 +102,8 @@ window.exportToJPG = function(sheetName, rowEscaped) {
     isiKonten += `
         </table>
         
-        <div style="text-align: center; margin-top: 35px; padding-top: 15px; border-top: 2px dashed #cbd5e1; font-size: 11px; color: #94a3b8; line-height: 1.5;">
-            Terima kasih atas dedikasi dan kepercayaan Anda bersama kami.<br>
+        <div style="text-align: center; margin-top: 40px; padding-top: 15px; border-top: 2px dashed #cbd5e1; font-size: 11px; color: #94a3b8; line-height: 1.5;">
+            Terma kasih atas dedikasi dan kepercayaan Anda bersama kami.<br>
             <strong style="color: #64748b;">SIM Admin Bimbel Ilmana</strong>
         </div>
     </div>
@@ -110,7 +111,7 @@ window.exportToJPG = function(sheetName, rowEscaped) {
     
     printContainer.innerHTML = isiKonten;
 
-    // 2. Suntikkan CSS khusus Cetak agar dashboard utama sembunyi total saat jendela print aktif
+    // 2. Buat CSS Dynamic khusus cetak (Menyembunyikan dashboard utama sewaktu jendela print muncul)
     const stylePrint = document.createElement('style');
     stylePrint.innerHTML = `
         @media print {
@@ -120,19 +121,20 @@ window.exportToJPG = function(sheetName, rowEscaped) {
         }
     `;
 
-    // 3. Pasang ke dokumen dan eksekusi cetak browser
+    // 3. Pasangkan elemen ke dalam dokumen browser
     document.head.appendChild(stylePrint);
     document.body.appendChild(printContainer);
     
-    // Beri jeda sepersekian detik agar layout siap, lalu panggil cetak browser
+    // Beri jeda 150ms agar browser selesai menyusun layout kuitansi, lalu panggil fungsi print
     setTimeout(() => {
         window.print();
         
-        // 4. Bersihkan kembali dokumen setelah selesai cetak / batal agar normal lagi
+        // 4. Setelah jendela print ditutup/selesai, bersihkan elemen bayangan agar dashboard kembali normal
         document.body.removeChild(printContainer);
         document.head.removeChild(stylePrint);
     }, 150);
 };
+
 // ==========================================
 // 3. FUNGSI OTOMATISASI FORM MODAL INPUT / EDIT
 // ==========================================
