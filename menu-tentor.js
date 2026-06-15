@@ -1,5 +1,5 @@
-// Struktur kolom tetap: ID, Nama Tentor, Keahlian, No HP, Username, Password
-const HEADERS_TENTOR = ["ID", "Nama Tentor", "Keahlian", "No HP", "Username", "Password"];
+// Sesuaikan dengan kolom Google Sheet: ID Tentor, Nama Tentor, Alamat, No. WA, Gaji Per Jam, Username, Password
+const HEADERS_TENTOR = ["ID Tentor", "Nama Tentor", "Alamat", "No. WA", "Gaji Per Jam", "Username", "Password"];
 
 async function fetchTentor() {
     currentActiveMenu = "tentor";
