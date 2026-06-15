@@ -61,18 +61,18 @@ window.openUpdateModular = function(sheetName, rowEscaped) {
 };
 
 // ==========================================
-// 2. FUNGSI UTAMA: CETAK KUITANSI LANDSCAPE (ANTI-CRASH)
+// 2. FUNGSI UTAMA: CETAK KUITANSI LANDSCAPE (FINAL FIX)
 // ==========================================
 window.exportToJPG = function(sheetName, rowEscaped) {
     const row = JSON.parse(decodeURIComponent(atob(rowEscaped)));
 
-    // Ambil data primary ID untuk penamaan berkas / pencarian data
-    let primaryId = row[Object.keys(row)[0]] || 'INV-000';
+    // Ambil data primary ID
+    let primaryId = row["ID Invoice"] || row["ID Slip"] || row[Object.keys(row)[0]] || 'INV-000';
     
-    // Extrak variabel fleksibel (mengatasi variasi penamaan kolom di Google Sheet)
+    // Ekstraksi Variabel Utama
     let namaSubjek = row["Nama Siswa"] || row["Nama Tentor"] || row["Nama"] || "-";
     let bulanTahun = row["Bulan/Tahun"] || row["Tanggal"] || row["Bulan"] || "-";
-    let jumlahPertemuan = row["Jumlah Pertemuan"] || row["Total Durasi"] || "-";
+    let jumlahPertemuan = row["Jumlah Pertemuan"] || row["Total Durasi"] || "0";
     
     // Deteksi Nominal Keuangan
     let nominalUtama = row["Jumlah Pembayaran"] || row["Total Tagihan"] || row["Total Diterima"] || row["Gaji Pokok"] || 0;
@@ -82,41 +82,44 @@ window.exportToJPG = function(sheetName, rowEscaped) {
     const printContainer = document.createElement('div');
     printContainer.id = "area-cetak-sim-bimbel";
     
-    // Struktur HTML Faktur Resmi Berorientasi Landscape (A5 / Kuarto Landscape Style)
+    // URL QR Code Validasi Transaksi
+    const qrUrl = `https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=BIMBEL_ILMANA_${primaryId}_VALID&choe=UTF-8`;
+
+    // Struktur HTML Faktur Landscape Ekonomis & Rapi
     let isiKonten = `
-        <div style="width: 790px; margin: 0 auto; padding: 25px; background: #ffffff; color: #334155; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; line-height: 1.5;">
+        <div style="width: 100%; max-width: 900px; margin: 0 auto; padding: 20px; background: #ffffff; color: #334155; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; line-height: 1.5;">
             
-            <table style="width: 100%; border-bottom: 3px double #64748b; padding-bottom: 12px; margin-bottom: 15px;">
+            <table style="width: 100%; border-bottom: 3px double #475569; padding-bottom: 10px; margin-bottom: 15px; border-collapse: collapse;">
                 <tr>
-                    <td style="width: 80px; vertical-align: middle;">
-                        <img src="logo.png" alt="Logo" style="max-height: 65px; max-width: 75px; object-fit: contain;" onerror="this.style.display='none';">
+                    <td style="width: 75px; vertical-align: middle;">
+                        <img src="logo.png" alt="Logo" style="max-height: 60px; max-width: 70px; object-fit: contain;" onerror="this.style.display='none';">
                     </td>
                     <td style="vertical-align: middle; padding-left: 10px;">
-                        <h1 style="margin: 0; padding: 0; color: #4f46e5; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">BIMBEL ILMANA</h1>
-                        <p style="margin: 3px 0 0 0; padding: 0; font-size: 11px; color: #475569; font-weight: 500;">
-                            <i class="fa-solid fa-location-dot"></i> Gondang No. 46 RT 03/RW 04, Candi, Ampel, Boyolali<br>
-                            <i class="fa-brands fa-whatsapp"></i> WhatsApp Admin: 083866682376 
+                        <h1 style="margin: 0; padding: 0; color: #4f46e5; font-size: 24px; font-weight: 800; letter-spacing: 0.5px;">BIMBEL ILMANA</h1>
+                        <p style="margin: 2px 0 0 0; padding: 0; font-size: 11px; color: #475569; font-weight: 500; line-height: 1.4;">
+                            Gondang No. 46 RT 03/RW 04, Candi, Ampel, Boyolali<br>
+                            WhatsApp Admin: 083866682376 | Cloud Admin System
                         </p>
                     </td>
                     <td style="text-align: right; vertical-align: bottom; width: 250px;">
-                        <h2 style="margin: 0; padding: 0; color: #0f172a; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">BUKTI ${sheetName.toUpperCase()}</h2>
-                        <p style="margin: 2px 0 0 0; font-family: monospace; font-size: 11px; color: #64748b;">No: ${primaryId}</p>
+                        <h2 style="margin: 0; padding: 0; color: #0f172a; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">BUKTI ${sheetName.toUpperCase()}</h2>
+                        <p style="margin: 2px 0 0 0; font-family: monospace; font-size: 12px; color: #4f46e5; font-weight: bold;">No: ${primaryId}</p>
                     </td>
                 </tr>
             </table>
 
-            <table style="width: 100%; margin-bottom: 20px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #f1f5f9;">
+            <table style="width: 100%; margin-bottom: 20px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; border-collapse: collapse;">
                 <tr>
-                    <td style="width: 50%; vertical-align: top;">
-                        <span style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 10px; block; margin-bottom: 3px;">Ditujukan Kepada:</span>
-                        <table style="font-size: 12px;">
-                            <tr><td style="color: #64748b; width: 50px;">Nama</td><td style="font-weight: 700; color: #0f172a;">: ${namaSubjek}</td></tr>
+                    <td style="width: 50%; vertical-align: top; padding: 5px;">
+                        <span style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 5px;">Ditujukan Kepada:</span>
+                        <table style="font-size: 13px; width: 100%;">
+                            <tr><td style="color: #64748b; width: 70px;">Nama</td><td style="font-weight: 700; color: #0f172a;">: ${namaSubjek}</td></tr>
                             <tr><td style="color: #64748b;">Alamat</td><td style="color: #334155;">: Boyolali, Jawa Tengah</td></tr>
                         </table>
                     </td>
-                    <td style="width: 50%; vertical-align: top; text-align: right;">
-                        <span style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 10px; block; margin-bottom: 3px;">Tanggal Dokumen:</span>
-                        <table style="font-size: 12px; margin-left: auto;">
+                    <td style="width: 50%; vertical-align: top; text-align: right; padding: 5px;">
+                        <span style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 5px;">Tanggal Dokumen:</span>
+                        <table style="font-size: 13px; margin-left: auto;">
                             <tr><td style="color: #64748b; text-align: right;">Periode / Bulan</td><td style="font-weight: 600; color: #0f172a; padding-left: 5px;">: ${bulanTahun}</td></tr>
                             <tr><td style="color: #64748b; text-align: right;">Tgl Dibuat</td><td style="color: #334155; padding-left: 5px;">: ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</td></tr>
                         </table>
@@ -124,55 +127,55 @@ window.exportToJPG = function(sheetName, rowEscaped) {
                 </tr>
             </table>
 
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 12px;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
                 <thead>
                     <tr style="background: #4f46e5; color: #ffffff;">
-                        <th style="padding: 10px; text-align: left; border-top-left-radius: 4px; border-bottom-left-radius: 4px; width: 40%;">Deskripsi Komponen</th>
-                        <th style="padding: 10px; text-align: center; width: 20%;">Jumlah Pertemuan</th>
-                        <th style="padding: 10px; text-align: right; width: 20%;">Harga Paket</th>
-                        <th style="padding: 10px; text-align: right; border-top-right-radius: 4px; border-bottom-right-radius: 4px; width: 20%;">Total</th>
+                        <th style="padding: 10px; text-align: left; width: 45%; border: 1px solid #4f46e5;">Deskripsi Komponen</th>
+                        <th style="padding: 10px; text-align: center; width: 15%; border: 1px solid #4f46e5;">Jumlah Pertemuan</th>
+                        <th style="padding: 10px; text-align: right; width: 20%; border: 1px solid #4f46e5;">Harga Paket</th>
+                        <th style="padding: 10px; text-align: right; width: 20%; border: 1px solid #4f46e5;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr style="background: #ffffff;">
-                        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #1e293b;">
+                        <td style="padding: 12px 10px; border: 1px solid #e2e8f0; font-weight: 600; color: #1e293b;">
                             Layanan Jasa Pengajaran Bimbel Ilmana (${sheetName})
                         </td>
-                        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #334155;">
+                        <td style="padding: 12px 10px; border: 1px solid #e2e8f0; text-align: center; color: #334155;">
                             ${jumlahPertemuan} Pertemuan
                         </td>
-                        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #334155;">
+                        <td style="padding: 12px 10px; border: 1px solid #e2e8f0; text-align: right; color: #334155;">
                             ${formatIDR(hargaPaket)}
                         </td>
-                        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold; color: #0f172a;">
+                        <td style="padding: 12px 10px; border: 1px solid #e2e8f0; text-align: right; font-weight: bold; color: #0f172a;">
                             ${formatIDR(hargaPaket)}
                         </td>
                     </tr>
                     <tr style="background: #f8fafc;">
-                        <td colspan="2" style="padding: 10px;"></td>
-                        <td style="padding: 10px; text-align: right; font-weight: 700; color: #475569;">TOTAL TAGIHAN:</td>
-                        <td style="padding: 10px; text-align: right; font-weight: 800; color: #4f46e5; font-size: 13px; background: #e0e7ff;">
+                        <td colspan="2" style="border: 1px solid #e2e8f0;"></td>
+                        <td style="padding: 10px; text-align: right; font-weight: 700; color: #475569; border: 1px solid #e2e8f0;">TOTAL TAGIHAN:</td>
+                        <td style="padding: 10px; text-align: right; font-weight: 800; color: #4f46e5; font-size: 14px; background: #e0e7ff; border: 1px solid #cbd5e1;">
                             ${formatIDR(hargaPaket)}
                         </td>
                     </tr>
                 </tbody>
             </table>
 
-            <table style="width: 100%; margin-top: 15px;">
+            <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
                 <tr>
-                    <td style="vertical-align: top; color: #94a3b8; font-size: 11px; font-style: italic; width: 60%;">
+                    <td style="vertical-align: middle; color: #64748b; font-size: 11px; font-style: italic; width: 65%;">
                         * Bukti ini sah dikeluarkan secara sistem awan (cloud) SIM Admin Bimbel Ilmana.<br>
-                        Terima kasih atas kepercayaan Anda bersama kami.
+                        Terima kasih atas dedikasi dan kepercayaan Anda bersama kami.
                     </td>
-                    <td style="width: 40%; text-align: right; vertical-align: top;">
+                    <td style="width: 35%; text-align: right; vertical-align: top;">
                         <div style="display: inline-block; text-align: center; width: 160px;">
-                            <span style="color: #64748b; font-size: 11px; display: block; margin-bottom: 5px;">Hormat Kami,</span>
+                            <span style="color: #64748b; font-size: 12px; display: block; margin-bottom: 8px;">Hormat Kami,</span>
                             
-                            <div style="margin: 5px auto; padding: 4px; background: #ffffff; border: 1px solid #e2e8f0; inline-block; width: 75px; height: 75px; border-radius: 4px;">
-                                <img src="https://chart.googleapis.com/chart?chs=75x75&cht=qr&chl=BIMBEL_ILMANA_${primaryId}_VALID&choe=UTF-8" style="width:100%; height:100%;" alt="QR Code Sign">
+                            <div style="margin: 0 auto; padding: 4px; background: #ffffff; border: 1px solid #cbd5e1; display: inline-block; width: 85px; height: 85px; border-radius: 4px;">
+                                <img src="${qrUrl}" style="width: 100%; height: 100%; display: block;" alt="QR Code Sign">
                             </div>
                             
-                            <strong style="color: #0f172a; font-size: 12px; display: block; margin-top: 5px; border-top: 1px solid #cbd5e1; padding-top: 3px;">Admin Bimbel Ilmana</strong>
+                            <strong style="color: #0f172a; font-size: 13px; display: block; margin-top: 8px; border-top: 1px solid #cbd5e1; padding-top: 4px;">Admin Bimbel Ilmana</strong>
                         </div>
                     </td>
                 </tr>
@@ -183,32 +186,32 @@ window.exportToJPG = function(sheetName, rowEscaped) {
     
     printContainer.innerHTML = isiKonten;
 
-    // 2. Suntikkan CSS khusus Cetak Kertas LANDSCAPE & Sembunyikan Dashboard Utama
+    // 2. Suntikkan CSS khusus Cetak Landscape
     const stylePrint = document.createElement('style');
     stylePrint.innerHTML = `
         @media print {
             @page { 
                 size: A4 landscape; 
-                margin: 15mm; 
+                margin: 10mm 15mm 10mm 15mm; 
             }
             body * { display: none !important; }
             #area-cetak-sim-bimbel, #area-cetak-sim-bimbel * { display: block !important; }
+            #area-cetak-sim-bimbel table, #area-cetak-sim-bimbel tr, #area-cetak-sim-bimbel td, #area-cetak-sim-bimbel th { display: table !important; }
+            #area-cetak-sim-bimbel tbody { display: table-row-group !important; }
+            #area-cetak-sim-bimbel thead { display: table-header-group !important; }
             #area-cetak-sim-bimbel { position: absolute; left: 0; top: 0; width: 100%; background: #ffffff; }
-            table { page-break-inside: avoid; }
         }
     `;
 
-    // 3. Pasang ke dokumen dan eksekusi cetak browser
     document.head.appendChild(stylePrint);
     document.body.appendChild(printContainer);
     
+    // Beri jeda sedikit lebih lama (400ms) agar API Google Chart QR Code selesai dimuat sempurna oleh browser sebelum cetak
     setTimeout(() => {
         window.print();
-        
-        // 4. Bersihkan elemen bayangan setelah selesai / batal cetak agar dashboard normal kembali
         document.body.removeChild(printContainer);
         document.head.removeChild(stylePrint);
-    }, 200);
+    }, 400);
 };
 
 // ==========================================
