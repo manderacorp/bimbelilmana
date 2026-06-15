@@ -11,8 +11,7 @@ function renderTableModular(container, res, headers, sheetName) {
             tableHTML += `<tr class="hover:bg-slate-50">`;
             headers.forEach(h => {
                 let val = row[h] !== undefined && row[h] !== null ? row[h] : "-";
-                // Otomatisasi konversi format Rupiah jika nama kolom berbau keuangan
-                if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|terima|bonus/i.test(h)) val = formatIDR(val);
+                if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|terima|bonus|pokok/i.test(h)) val = formatIDR(val);
                 tableHTML += `<td class="px-4 py-3">${val}</td>`;
             });
 
@@ -20,13 +19,11 @@ function renderTableModular(container, res, headers, sheetName) {
             const idValue = row[idKey] ? row[idKey].toString().replace(/'/g, "\\'") : "";
             const rowEscaped = btoa(encodeURIComponent(JSON.stringify(row)));
             
-            // Tombol Standar CRUD: Edit & Hapus
             let aksiButtons = `
                 <button onclick="openUpdateCrud('${sheetName}', '${rowEscaped}')" class="p-1 text-amber-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-all cursor-pointer" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
                 <button onclick="hapusDataCrud('${sheetName}', '${idValue}')" class="p-1 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all cursor-pointer" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>
             `;
 
-            // FITUR KOREKSI 2: JIKA INVOICE ATAU SLIP GAJI, TAMBAHKAN TOMBOL EXPORT GAMBAR JPG
             if (sheetName === 'Invoice' || sheetName === 'Slip Gaji') {
                 aksiButtons += `
                     <button onclick="exportToJPG('${sheetName}', '${rowEscaped}')" class="p-1 text-emerald-500 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-all cursor-pointer" title="Export Gambar JPG"><i class="fa-solid fa-file-image"></i></button>
@@ -43,7 +40,7 @@ function renderTableModular(container, res, headers, sheetName) {
     }
 }
 
-// FUNGSI UTAMA: PEMBUAT FORM MODAL + LOGIKA SELEKTIF DROPDOWN LIST DATA
+// FUNGSI UTAMA: PEMBUAT FORM MODAL + LOGIKA DROPDOWN SELEKTIF
 window.setupModalDinamis = async function(title, sheetName, actionType, headers, activeRowData = null) {
     const modal = document.getElementById('crud-modal');
     const modalTitle = document.getElementById('modal-title');
@@ -66,7 +63,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
     let opsiSiswa = [];
     let opsiTentor = [];
 
-    // ATURAN DROPDOWN: Dropdown HANYA aktif untuk menu Jurnal, Invoice, dan Slip Gaji
+    // ATURAN SELEKTIF: Dropdown hanya aktif pada form Invoice, Slip Gaji, dan Jurnal Mengajar saja
     const bolehDropdown = ["Jurnal", "Invoice", "Slip Gaji"].includes(sheetName);
     
     const butuhSiswa = bolehDropdown && headers.some(h => h.toLowerCase().includes('siswa'));
@@ -94,10 +91,10 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
 
     container.innerHTML = '';
 
-    // Render Field Secara Dinamis
+    // Susun Field Form HTML
     headers.forEach((header, index) => {
         const lowerHeader = header.toLowerCase();
-        if (index === 0 && actionType === 'create') return; // Skip Kolom ID Utama jika data baru
+        if (index === 0 && actionType === 'create') return;
 
         const div = document.createElement('div');
         div.className = 'flex flex-col gap-1';
@@ -110,7 +107,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
         let inputElement;
         const currentVal = (actionType === 'update' && activeRowData) ? activeRowData[header] : '';
 
-        // KONDISI DROPDOWN SISWA (HANYA BERLAKU DI MENU JURNAL / INVOICE)
+        // Dropdown nama siswa di menu Jurnal / Invoice
         if (lowerHeader.includes('siswa') && bolehDropdown) {
             inputElement = document.createElement('select');
             inputElement.name = header;
@@ -130,7 +127,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
                 inputElement.appendChild(opt);
             });
         }
-        // KONDISI DROPDOWN TENTOR (HANYA BERLAKU DI MENU JURNAL / SLIP GAJI)
+        // Dropdown nama tentor di menu Jurnal / Slip Gaji
         else if (lowerHeader.includes('tentor') && bolehDropdown) {
             inputElement = document.createElement('select');
             inputElement.name = header;
@@ -150,7 +147,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
                 inputElement.appendChild(opt);
             });
         }
-        // KONDISI INPUT BIASA (TERMASUK KETIK MANUAL KHUSUS INPUT DATA SISWA & TENTOR BARU)
+        // Input ketik biasa (Khusus pendaftaran Data Siswa Baru & Data Tentor Baru agar manual ketik)
         else {
             inputElement = document.createElement('input');
             inputElement.name = header;
@@ -177,23 +174,22 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
     modal.classList.remove('hidden-system');
 };
 
-// Fungsi Membuka Form Mode Edit
+// Fungsi Membuka Modal Mode Edit Data
 window.openUpdateCrud = function(sheetName, rowEscaped) {
     const rowData = JSON.parse(decodeURIComponent(atob(rowEscaped)));
     const headers = Object.keys(rowData);
     setupModalDinamis(`Edit Data ${sheetName}`, sheetName, "update", headers, rowData);
 };
 
-// Fungsi Tutup Form Modal
+// Fungsi Menutup Modal
 window.closeCrudModal = function() {
     document.getElementById('crud-modal').classList.add('hidden-system');
     document.getElementById('crud-form').reset();
 };
 
-// FITUR KOREKSI 2: ENGINE PEMBUAT GAMBAR NOTA DAN UNDUH SEBAGAI JPG
+// EXPORT JPG: Membuat Struk Kuitansi Cetak untuk Invoice & Slip Gaji
 window.exportToJPG = function(sheetName, rowEscaped) {
     const row = JSON.parse(decodeURIComponent(atob(rowEscaped)));
-    
     const nota = document.createElement('div');
     nota.style = "position:absolute; left:-9999px; width:450px; background:#fff; padding:30px; font-family:sans-serif; color:#334155; border:1px solid #e2e8f0; border-radius:12px;";
     
@@ -236,7 +232,7 @@ window.exportToJPG = function(sheetName, rowEscaped) {
     });
 };
 
-// SUBMIT: SAVE ADD / UPDATE KE DATABASE SPREADSHEET
+// EVENT FORM SUBMIT DATA
 document.getElementById('crud-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btnSave = document.getElementById('btn-save-crud');
@@ -260,7 +256,6 @@ document.getElementById('crud-form').addEventListener('submit', async (e) => {
             alert(json.message);
             closeCrudModal();
             
-            // Auto reload modul menu aktif agar langsung sinkron
             if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') fetchSiswa();
             else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') fetchTentor();
             else if (sheetName === 'Jurnal' && typeof fetchJurnal === 'function') fetchJurnal();
@@ -279,7 +274,7 @@ document.getElementById('crud-form').addEventListener('submit', async (e) => {
     }
 });
 
-// DELETE: HAPUS DATA DARI WEB APP DATABASE
+// EVENT HAPUS DATA (DELETE)
 window.hapusDataCrud = async function(sheetName, idValue) {
     if (!confirm(`Apakah Anda yakin ingin menghapus data dengan ID: ${idValue}?`)) return;
 
@@ -305,7 +300,7 @@ window.hapusDataCrud = async function(sheetName, idValue) {
     }
 };
 
-// FITUR KOREKSI 1: SINKRONISASI TOTAL DEKLARASI TOMBOL ADD TERHADAP KONTROL HEADER MENU MASING-MASING
+// PENYELARASAN TOMBOL ADD BERDASARKAN PARAMETER VARIABEL HEADER BAWAAN MODUL ASAL NYA
 window.openCreateSiswa = function() { setupModalDinamis("Tambah Siswa Baru", "Data Siswa", "create", HEADERS_SISWA); };
 window.openCreateTentor = function() { setupModalDinamis("Tambah Tentor Baru", "Data Tentor", "create", HEADERS_TENTOR); };
 window.openCreateJurnal = function() { setupModalDinamis("Tambah Jurnal Mengajar", "Jurnal", "create", HEADERS_JURNAL); };
