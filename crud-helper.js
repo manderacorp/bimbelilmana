@@ -1,4 +1,4 @@
-// SIM Admin Bimbel Ilmana - Core CRUD Helper System
+// SIM Admin Bimbel Ilmana - Core CRUD Helper System (UPDATED & FIXED)
 
 // ==========================================
 // 1. FUNGSI UTAMA: RENDER TABEL MODULAR
@@ -17,8 +17,9 @@ function renderTableModular(container, res, headers, sheetName) {
                 let val = rowKey && row[rowKey] !== undefined && row[rowKey] !== null ? row[rowKey] : "-";
                 
                 // Format IDR otomatis jika kolom berhubungan dengan nominal keuangan/uang
-                if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|pokok|bonus|diterima/i.test(h)) {
-                    val = formatIDR(val);
+                if (/harga|gaji|pembayaran|jumlah|tagihan|pokok|bonus|diterima/i.test(h)) {
+                    let num = typeof val === 'number' ? val : parseInt(val.toString().replace(/[^0-9]/g, '')) || 0;
+                    val = formatIDR(num);
                 }
                 tableHTML += `<td class="px-4 py-3">${val}</td>`;
             });
@@ -61,7 +62,7 @@ window.openUpdateModular = function(sheetName, rowEscaped) {
 };
 
 // ==========================================
-// 2. FUNGSI UTAMA: CETAK KUITANSI LANDSCAPE (FINAL FIX)
+// 2. FUNGSI UTAMA: CETAK KUITANSI LANDSCAPE (FINAL PRECISE FIX)
 // ==========================================
 window.exportToJPG = function(sheetName, rowEscaped) {
     const row = JSON.parse(decodeURIComponent(atob(rowEscaped)));
@@ -82,100 +83,100 @@ window.exportToJPG = function(sheetName, rowEscaped) {
     const printContainer = document.createElement('div');
     printContainer.id = "area-cetak-sim-bimbel";
     
-    // URL QR Code Validasi Transaksi
-    const qrUrl = `https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=BIMBEL_ILMANA_${primaryId}_VALID&choe=UTF-8`;
+    // URL QR Code Validasi Transaksi Tanda Tangan Digital
+    const qrUrl = `https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=BIMBEL_ILMANA_${primaryId}_VALID&choe=UTF-8`;
 
-    // Struktur HTML Faktur Landscape Ekonomis & Rapi
+    // Struktur HTML Faktur Landscape Ekonomis & Rapi Tanpa Piksel Statis
     let isiKonten = `
-        <div style="width: 100%; max-width: 900px; margin: 0 auto; padding: 20px; background: #ffffff; color: #334155; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; line-height: 1.5;">
+        <div style="width: 100%; box-sizing: border-box; padding: 10px; background: #ffffff; color: #334155; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; line-height: 1.5;">
             
-            <table style="width: 100%; border-bottom: 3px double #475569; padding-bottom: 10px; margin-bottom: 15px; border-collapse: collapse;">
+            <table style="width: 100%; border-bottom: 3px double #475569; padding-bottom: 12px; margin-bottom: 15px; border-collapse: collapse;">
                 <tr>
-                    <td style="width: 75px; vertical-align: middle;">
-                        <img src="logo.png" alt="Logo" style="max-height: 60px; max-width: 70px; object-fit: contain;" onerror="this.style.display='none';">
+                    <td style="width: 70px; vertical-align: middle;">
+                        <img src="logo.png" alt="Logo" style="max-height: 60px; max-width: 65px; object-fit: contain;" onerror="this.style.display='none';">
                     </td>
-                    <td style="vertical-align: middle; padding-left: 10px;">
-                        <h1 style="margin: 0; padding: 0; color: #4f46e5; font-size: 24px; font-weight: 800; letter-spacing: 0.5px;">BIMBEL ILMANA</h1>
-                        <p style="margin: 2px 0 0 0; padding: 0; font-size: 11px; color: #475569; font-weight: 500; line-height: 1.4;">
+                    <td style="vertical-align: middle; padding-left: 12px;">
+                        <h1 style="margin: 0; padding: 0; color: #4f46e5; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.1;">BIMBEL ILMANA</h1>
+                        <p style="margin: 4px 0 0 0; padding: 0; font-size: 11px; color: #475569; font-weight: 500; line-height: 1.4;">
                             Gondang No. 46 RT 03/RW 04, Candi, Ampel, Boyolali<br>
-                            WhatsApp Admin: 083866682376 | Cloud Admin System
+                            WhatsApp Admin: 083866682376 | Cloud Facilitator Admin System
                         </p>
                     </td>
-                    <td style="text-align: right; vertical-align: bottom; width: 250px;">
-                        <h2 style="margin: 0; padding: 0; color: #0f172a; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">BUKTI ${sheetName.toUpperCase()}</h2>
-                        <p style="margin: 2px 0 0 0; font-family: monospace; font-size: 12px; color: #4f46e5; font-weight: bold;">No: ${primaryId}</p>
+                    <td style="text-align: right; vertical-align: bottom; width: 280px;">
+                        <h2 style="margin: 0; padding: 0; color: #0f172a; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">BUKTI KUITANSI ${sheetName.toUpperCase()}</h2>
+                        <p style="margin: 3px 0 0 0; font-family: monospace; font-size: 12px; color: #4f46e5; font-weight: bold;">No. Dokumen: ${primaryId}</p>
                     </td>
                 </tr>
             </table>
 
-            <table style="width: 100%; margin-bottom: 20px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; border-collapse: collapse;">
+            <table style="width: 100%; margin-bottom: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-collapse: collapse; border-radius: 6px;">
                 <tr>
-                    <td style="width: 50%; vertical-align: top; padding: 5px;">
-                        <span style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 5px;">Ditujukan Kepada:</span>
+                    <td style="width: 50%; vertical-align: top; padding: 12px;">
+                        <span style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 6px; letter-spacing: 0.5px;">Identitas Penerima:</span>
                         <table style="font-size: 13px; width: 100%;">
-                            <tr><td style="color: #64748b; width: 70px;">Nama</td><td style="font-weight: 700; color: #0f172a;">: ${namaSubjek}</td></tr>
-                            <tr><td style="color: #64748b;">Alamat</td><td style="color: #334155;">: Boyolali, Jawa Tengah</td></tr>
+                            <tr><td style="color: #64748b; width: 90px; padding: 2px 0;">Nama Lengkap</td><td style="font-weight: 700; color: #0f172a; padding: 2px 0;">: ${namaSubjek}</td></tr>
+                            <tr><td style="color: #64748b; padding: 2px 0;">Alamat Siswa</td><td style="color: #334155; padding: 2px 0;">: Boyolali, Jawa Tengah</td></tr>
                         </table>
                     </td>
-                    <td style="width: 50%; vertical-align: top; text-align: right; padding: 5px;">
-                        <span style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 5px;">Tanggal Dokumen:</span>
+                    <td style="width: 50%; vertical-align: top; text-align: right; padding: 12px;">
+                        <span style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 6px; letter-spacing: 0.5px;">Informasi Penerbitan:</span>
                         <table style="font-size: 13px; margin-left: auto;">
-                            <tr><td style="color: #64748b; text-align: right;">Periode / Bulan</td><td style="font-weight: 600; color: #0f172a; padding-left: 5px;">: ${bulanTahun}</td></tr>
-                            <tr><td style="color: #64748b; text-align: right;">Tgl Dibuat</td><td style="color: #334155; padding-left: 5px;">: ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</td></tr>
+                            <tr><td style="color: #64748b; text-align: right; padding: 2px 0;">Periode / Bulan</td><td style="font-weight: 600; color: #0f172a; padding: 2px 5px 2px 15px;">: ${bulanTahun}</td></tr>
+                            <tr><td style="color: #64748b; text-align: right; padding: 2px 0;">Tanggal Invoice</td><td style="color: #334155; padding: 2px 5px 2px 15px;">: ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</td></tr>
                         </table>
                     </td>
                 </tr>
             </table>
 
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; border: 1px solid #cbd5e1;">
                 <thead>
                     <tr style="background: #4f46e5; color: #ffffff;">
-                        <th style="padding: 10px; text-align: left; width: 45%; border: 1px solid #4f46e5;">Deskripsi Komponen</th>
-                        <th style="padding: 10px; text-align: center; width: 15%; border: 1px solid #4f46e5;">Jumlah Pertemuan</th>
-                        <th style="padding: 10px; text-align: right; width: 20%; border: 1px solid #4f46e5;">Harga Paket</th>
-                        <th style="padding: 10px; text-align: right; width: 20%; border: 1px solid #4f46e5;">Total</th>
+                        <th style="padding: 10px; text-align: left; width: 45%; border: 1px solid #4f46e5; font-weight: 600;">Deskripsi Komponen Layanan</th>
+                        <th style="padding: 10px; text-align: center; width: 15%; border: 1px solid #4f46e5; font-weight: 600;">Jumlah Pertemuan</th>
+                        <th style="padding: 10px; text-align: right; width: 20%; border: 1px solid #4f46e5; font-weight: 600;">Harga Paket</th>
+                        <th style="padding: 10px; text-align: right; width: 20%; border: 1px solid #4f46e5; font-weight: 600;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr style="background: #ffffff;">
                         <td style="padding: 12px 10px; border: 1px solid #e2e8f0; font-weight: 600; color: #1e293b;">
-                            Layanan Jasa Pengajaran Bimbel Ilmana (${sheetName})
+                            Layanan Administrasi Jasa Pendidikan Bimbel Ilmana (${sheetName})
                         </td>
-                        <td style="padding: 12px 10px; border: 1px solid #e2e8f0; text-align: center; color: #334155;">
-                            ${jumlahPertemuan} Pertemuan
+                        <td style="padding: 12px 10px; border: 1px solid #e2e8f0; text-align: center; color: #334155; font-weight: 600;">
+                            ${jumlahPertemuan} Sesi
                         </td>
                         <td style="padding: 12px 10px; border: 1px solid #e2e8f0; text-align: right; color: #334155;">
                             ${formatIDR(hargaPaket)}
                         </td>
-                        <td style="padding: 12px 10px; border: 1px solid #e2e8f0; text-align: right; font-weight: bold; color: #0f172a;">
+                        <td style="padding: 12px 10px; border: 1px solid #e2e8f0; text-align: right; font-weight: 700; color: #0f172a;">
                             ${formatIDR(hargaPaket)}
                         </td>
                     </tr>
                     <tr style="background: #f8fafc;">
                         <td colspan="2" style="border: 1px solid #e2e8f0;"></td>
-                        <td style="padding: 10px; text-align: right; font-weight: 700; color: #475569; border: 1px solid #e2e8f0;">TOTAL TAGIHAN:</td>
-                        <td style="padding: 10px; text-align: right; font-weight: 800; color: #4f46e5; font-size: 14px; background: #e0e7ff; border: 1px solid #cbd5e1;">
+                        <td style="padding: 12px 10px; text-align: right; font-weight: 700; color: #475569; border: 1px solid #e2e8f0;">TOTAL AKHIR:</td>
+                        <td style="padding: 12px 10px; text-align: right; font-weight: 800; color: #4f46e5; font-size: 14px; background: #e0e7ff; border: 1px solid #cbd5e1;">
                             ${formatIDR(hargaPaket)}
                         </td>
                     </tr>
                 </tbody>
             </table>
 
-            <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
+            <table style="width: 100%; margin-top: 25px; border-collapse: collapse;">
                 <tr>
-                    <td style="vertical-align: middle; color: #64748b; font-size: 11px; font-style: italic; width: 65%;">
-                        * Bukti ini sah dikeluarkan secara sistem awan (cloud) SIM Admin Bimbel Ilmana.<br>
-                        Terima kasih atas dedikasi dan kepercayaan Anda bersama kami.
+                    <td style="vertical-align: top; color: #64748b; font-size: 11px; font-style: italic; width: 65%; line-height: 1.6; padding-top: 10px;">
+                        * Lembar dokumen ini sah dikeluarkan secara tersentralisasi oleh sistem komputerisasi SIM Admin Bimbel Ilmana.<br>
+                        * Harap simpan bukti pembayaran digital ini sebagai arsip validasi utama.
                     </td>
                     <td style="width: 35%; text-align: right; vertical-align: top;">
-                        <div style="display: inline-block; text-align: center; width: 160px;">
+                        <div style="display: inline-block; text-align: center; width: 170px;">
                             <span style="color: #64748b; font-size: 12px; display: block; margin-bottom: 8px;">Hormat Kami,</span>
                             
-                            <div style="margin: 0 auto; padding: 4px; background: #ffffff; border: 1px solid #cbd5e1; display: inline-block; width: 85px; height: 85px; border-radius: 4px;">
-                                <img src="${qrUrl}" style="width: 100%; height: 100%; display: block;" alt="QR Code Sign">
+                            <div style="margin: 0 auto; padding: 5px; background: #ffffff; border: 1px solid #cbd5e1; display: inline-block; width: 95px; height: 95px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                <img id="qr-image-render" src="${qrUrl}" style="width: 100%; height: 100%; display: block;" alt="Tanda Tangan QR">
                             </div>
                             
-                            <strong style="color: #0f172a; font-size: 13px; display: block; margin-top: 8px; border-top: 1px solid #cbd5e1; padding-top: 4px;">Admin Bimbel Ilmana</strong>
+                            <strong style="color: #0f172a; font-size: 13px; display: block; margin-top: 8px; border-top: 1px solid #cbd5e1; padding-top: 6px; font-weight: 700;">Admin Bimbel Ilmana</strong>
                         </div>
                     </td>
                 </tr>
@@ -186,13 +187,13 @@ window.exportToJPG = function(sheetName, rowEscaped) {
     
     printContainer.innerHTML = isiKonten;
 
-    // 2. Suntikkan CSS khusus Cetak Landscape
+    // Inject CSS Kunci Cetak Paksa Landscape
     const stylePrint = document.createElement('style');
     stylePrint.innerHTML = `
         @media print {
             @page { 
                 size: A4 landscape; 
-                margin: 10mm 15mm 10mm 15mm; 
+                margin: 12mm 15mm 12mm 15mm; 
             }
             body * { display: none !important; }
             #area-cetak-sim-bimbel, #area-cetak-sim-bimbel * { display: block !important; }
@@ -206,164 +207,74 @@ window.exportToJPG = function(sheetName, rowEscaped) {
     document.head.appendChild(stylePrint);
     document.body.appendChild(printContainer);
     
-    // Beri jeda sedikit lebih lama (400ms) agar API Google Chart QR Code selesai dimuat sempurna oleh browser sebelum cetak
+    // ANTI-BLANK QR CODE: Tunggu gambar QR Code selesai terdownload secara asinkronus penuh baru window.print dipicu
+    const qrImageDOM = document.getElementById('qr-image-render');
+    qrImageDOM.onload = function() {
+        setTimeout(() => {
+            window.print();
+            document.body.removeChild(printContainer);
+            document.head.removeChild(stylePrint);
+        }, 150);
+    };
+    
+    // Cadangan darurat jika onload tidak tertangkap browser lama
     setTimeout(() => {
-        window.print();
-        document.body.removeChild(printContainer);
-        document.head.removeChild(stylePrint);
-    }, 400);
+        if (document.getElementById('area-cetak-sim-bimbel')) {
+            window.print();
+            document.body.removeChild(printContainer);
+            document.head.removeChild(stylePrint);
+        }
+    }, 600);
 };
 
 // ==========================================
-// 3. FUNGSI OTOMATISASI FORM MODAL INPUT / EDIT
+// 3. FUNGSI OTOMATISASI FORM MODAL INPUT / EDIT (DROPDOWN AUTOMATION)
 // ==========================================
-window.setupModalDinamis = function(title, sheetName, actionType, headers, dataObj = null) {
+window.setupModalDinamis = async function(title, sheetName, actionType, headers, dataObj = null) {
     document.getElementById('modal-title').innerText = title;
     document.getElementById('modal-sheet-name').value = sheetName;
     document.getElementById('modal-action-type').value = actionType;
     
     const container = document.getElementById('modal-fields-container');
-    container.innerHTML = '';
+    container.innerHTML = '<div class="col-span-full text-center p-4 text-slate-400"><i class="fa-solid fa-spinner animate-spin mr-2"></i>Membangun form dinamis...</div>';
     
     const idKey = headers[0];
     let idValue = dataObj ? dataObj[idKey] : '';
     document.getElementById('modal-id').value = idValue;
 
-    headers.forEach((h, index) => {
+    let fieldsHTML = '';
+
+    for (let index = 0; index < headers.length; index++) {
+        let h = headers[index];
+        let fieldVal = dataObj && dataObj[h] !== undefined ? dataObj[h] : '';
+
         if (index === 0) {
-            container.innerHTML += `
+            fieldsHTML += `
                 <div class="flex flex-col gap-1">
                     <label class="font-semibold text-slate-700">${h}</label>
                     <input type="text" value="${idValue || 'ID OTOMATIS GENERATE'}" disabled class="p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-400 font-medium">
                 </div>
             `;
         } else {
-            let fieldVal = dataObj && dataObj[h] !== undefined ? dataObj[h] : '';
-            
-            if (h.toLowerCase().trim() === 'status' || h.toLowerCase().trim() === 'status pembayaran') {
-                container.innerHTML += `
+            let hClean = h.toLowerCase().trim();
+
+            // 1. DROPDOWN OTOMATIS UNTUK NAMA SISWA
+            if (hClean === 'nama siswa') {
+                fieldsHTML += `
                     <div class="flex flex-col gap-1">
                         <label class="font-semibold text-slate-700">${h}</label>
-                        <select name="${h}" required class="p-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500">
-                            <option value="Lunas" ${fieldVal === 'Lunas' ? 'selected' : ''}>Lunas</option>
-                            <option value="Belum Lunas" ${fieldVal === 'Belum Lunas' ? 'selected' : ''}>Belum Lunas</option>
-                            <option value="Proses" ${fieldVal === 'Proses' ? 'selected' : ''}>Proses</option>
+                        <select name="${h}" required id="select-dropdown-siswa" class="p-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500">
+                            <option value="">-- Memuat Daftar Siswa... --</option>
                         </select>
                     </div>
                 `;
-            } else if (h.toLowerCase().trim() === 'tipe') {
-                container.innerHTML += `
+                // Jalankan pengambilan data siswa dibelakang layar (async)
+                setTimeout(() => loadDropdownOptions(`${API_URL}?action=getDataSiswa`, 'Nama Siswa', 'select-dropdown-siswa', fieldVal), 50);
+            } 
+            // 2. DROPDOWN OTOMATIS UNTUK NAMA TENTOR
+            else if (hClean === 'nama tentor') {
+                fieldsHTML += `
                     <div class="flex flex-col gap-1">
                         <label class="font-semibold text-slate-700">${h}</label>
-                        <select name="${h}" required class="p-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500">
-                            <option value="Pemasukan" ${fieldVal === 'Pemasukan' ? 'selected' : ''}>Pemasukan</option>
-                            <option value="Pengeluaran" ${fieldVal === 'Pengeluaran' ? 'selected' : ''}>Pengeluaran</option>
-                        </select>
-                    </div>
-                `;
-            } else {
-                let inputType = "text";
-                if (/harga|gaji|pembayaran|jumlah|tagihan|pokok|bonus|durasi|pertemuan/i.test(h)) inputType = "number";
-                if (/tanggal/i.test(h)) inputType = "date";
-
-                container.innerHTML += `
-                    <div class="flex flex-col gap-1">
-                        <label class="font-semibold text-slate-700">${h}</label>
-                        <input type="${inputType}" name="${h}" value="${fieldVal}" required class="p-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500">
-                    </div>
-                `;
-            }
-        }
-    });
-
-    document.getElementById('crud-modal').classList.remove('hidden-system');
-};
-
-window.closeCrudModal = function() {
-    document.getElementById('crud-modal').classList.add('hidden-system');
-    document.getElementById('crud-form').reset();
-};
-
-// ==========================================
-// 4. HANDLER EVENT SUBMIT FORM (CREATE & UPDATE)
-// ==========================================
-document.getElementById('crud-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btnSave = document.getElementById('btn-save-crud');
-    btnSave.disabled = true;
-    btnSave.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> Menyimpan...`;
-
-    const sheetName = document.getElementById('modal-sheet-name').value;
-    const actionType = document.getElementById('modal-action-type').value;
-    const idValue = document.getElementById('modal-id').value;
-    
-    const formData = {};
-    const elements = e.target.querySelectorAll('input[name], select[name]');
-    elements.forEach(el => {
-        formData[el.name] = el.value;
-    });
-
-    try {
-        const payload = {
-            action: actionType,
-            sheetName: sheetName,
-            id: idValue,
-            formData: formData
-        };
-
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-        
-        const json = await response.json();
-
-        if (json.status === 'success') {
-            alert(json.message);
-            closeCrudModal();
-            
-            if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') fetchSiswa();
-            else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') fetchTentor();
-            else if (sheetName === 'Jurnal' && typeof fetchJurnal === 'function') fetchJurnal();
-            else if (sheetName === 'Invoice' && typeof fetchInvoice === 'function') fetchInvoice();
-            else if (sheetName === 'Slip Gaji' && typeof fetchSlipgaji === 'function') fetchSlipgaji();
-            else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') fetchKeuangan();
-            else location.reload();
-        } else {
-            alert("Gagal memproses data: " + json.message);
-        }
-    } catch (err) {
-        alert("Terjadi gangguan jaringan atau URL GAS salah.");
-    } finally {
-        btnSave.disabled = false;
-        btnSave.innerHTML = `Simpan Data`;
-    }
-});
-
-// ==========================================
-// 5. HANDLER EVENT HAPUS DATA (DELETE)
-// ==========================================
-window.hapusDataCrud = async function(sheetName, idValue) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus permanen data dengan ID: ${idValue}?`)) return;
-
-    try {
-        const payload = { action: 'delete', sheetName: sheetName, id: idValue };
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const json = await res.json();
-
-        if (json.status === 'success') {
-            alert(json.message);
-            if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') fetchSiswa();
-            else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') fetchTentor();
-            else if (sheetName === 'Jurnal' && typeof fetchJurnal === 'function') fetchJurnal();
-            else if (sheetName === 'Invoice' && typeof fetchInvoice === 'function') fetchInvoice();
-            else if (sheetName === 'Slip Gaji' && typeof fetchSlipgaji === 'function') fetchSlipgaji();
-            else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') fetchKeuangan();
-            else location.reload();
-        } else {
-            alert("Gagal menghapus: " + json.message);
-        }
-    } catch (err) {
-        alert("Gagal memproses hapus data karena kendala jaringan.");
-    }
-};
+                        <select name="${h}" required id="select-dropdown-tentor" class="p-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500">
+                            <option value
