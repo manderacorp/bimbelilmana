@@ -1,6 +1,6 @@
 // SIM Admin Bimbel Ilmana - Core CRUD Helper System
 
-// Fungsi Global Render Tabel dari File Menu Terpisah
+// Fungsi Global Render Tabel Otomatis
 function renderTableModular(container, res, headers, sheetName) {
     if (res.status === 'success' && res.data && res.data.length > 0) {
         let tableHTML = `<table class="w-full text-left text-xs text-slate-600 border border-slate-100 rounded-lg overflow-hidden"><thead class="bg-slate-50 text-slate-500"><tr>`;
@@ -11,7 +11,8 @@ function renderTableModular(container, res, headers, sheetName) {
             tableHTML += `<tr class="hover:bg-slate-50">`;
             headers.forEach(h => {
                 let val = row[h] !== undefined && row[h] !== null ? row[h] : "-";
-                if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|total/i.test(h)) val = formatIDR(val);
+                // Otomatisasi konversi format Rupiah jika nama kolom berbau keuangan
+                if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|terima|bonus/i.test(h)) val = formatIDR(val);
                 tableHTML += `<td class="px-4 py-3">${val}</td>`;
             });
 
@@ -19,10 +20,20 @@ function renderTableModular(container, res, headers, sheetName) {
             const idValue = row[idKey] ? row[idKey].toString().replace(/'/g, "\\'") : "";
             const rowEscaped = btoa(encodeURIComponent(JSON.stringify(row)));
             
-            tableHTML += `<td class="px-4 py-3 text-center flex items-center justify-center gap-2">
-                <button onclick="openUpdateCrud('${sheetName}', '${rowEscaped}')" class="p-1 text-amber-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-all cursor-pointer"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button onclick="hapusDataCrud('${sheetName}', '${idValue}')" class="p-1 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
-            </td></tr>`;
+            // Tombol Standar CRUD: Edit & Hapus
+            let aksiButtons = `
+                <button onclick="openUpdateCrud('${sheetName}', '${rowEscaped}')" class="p-1 text-amber-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-all cursor-pointer" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="hapusDataCrud('${sheetName}', '${idValue}')" class="p-1 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all cursor-pointer" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>
+            `;
+
+            // FITUR KOREKSI 2: JIKA INVOICE ATAU SLIP GAJI, TAMBAHKAN TOMBOL EXPORT GAMBAR JPG
+            if (sheetName === 'Invoice' || sheetName === 'Slip Gaji') {
+                aksiButtons += `
+                    <button onclick="exportToJPG('${sheetName}', '${rowEscaped}')" class="p-1 text-emerald-500 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-all cursor-pointer" title="Export Gambar JPG"><i class="fa-solid fa-file-image"></i></button>
+                `;
+            }
+
+            tableHTML += `<td class="px-4 py-3 text-center flex items-center justify-center gap-2">${aksiButtons}</td></tr>`;
         });
 
         tableHTML += `</tbody></table>`;
@@ -32,7 +43,7 @@ function renderTableModular(container, res, headers, sheetName) {
     }
 }
 
-// FUNGSI UTAMA: PEMBUAT MODAL DINAMIS DENGAN KONTROL DROPDOWN SELEKTIF
+// FUNGSI UTAMA: PEMBUAT FORM MODAL + LOGIKA SELEKTIF DROPDOWN LIST DATA
 window.setupModalDinamis = async function(title, sheetName, actionType, headers, activeRowData = null) {
     const modal = document.getElementById('crud-modal');
     const modalTitle = document.getElementById('modal-title');
@@ -55,13 +66,12 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
     let opsiSiswa = [];
     let opsiTentor = [];
 
-    // KUNCI ATURAN: Dropdown hanya boleh aktif di sheet Jurnal, Invoice, dan Slip Gaji
+    // ATURAN DROPDOWN: Dropdown HANYA aktif untuk menu Jurnal, Invoice, dan Slip Gaji
     const bolehDropdown = ["Jurnal", "Invoice", "Slip Gaji"].includes(sheetName);
     
     const butuhSiswa = bolehDropdown && headers.some(h => h.toLowerCase().includes('siswa'));
     const butuhTentor = bolehDropdown && headers.some(h => h.toLowerCase().includes('tentor'));
 
-    // Tampilkan loading jika sistem sedang memuat opsi database
     if (butuhSiswa || butuhTentor) {
         container.innerHTML = `<div class="text-center py-4 text-slate-400 col-span-full"><i class="fa-solid fa-circle-notch animate-spin mr-2 text-indigo-500"></i>Menghubungkan ke database...</div>`;
     }
@@ -71,7 +81,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
             const res = await fetch(`${API_URL}?action=getDataSiswa`);
             const json = await res.json();
             if (json.status === 'success' && json.data) opsiSiswa = json.data;
-        } catch (e) { console.error("Gagal memuat opsi siswa", e); }
+        } catch (e) { console.error(e); }
     }
 
     if (butuhTentor) {
@@ -79,7 +89,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
             const res = await fetch(`${API_URL}?action=getDataTentor`);
             const json = await res.json();
             if (json.status === 'success' && json.data) opsiTentor = json.data;
-        } catch (e) { console.error("Gagal memuat opsi tentor", e); }
+        } catch (e) { console.error(e); }
     }
 
     container.innerHTML = '';
@@ -87,26 +97,24 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
     // Render Field Secara Dinamis
     headers.forEach((header, index) => {
         const lowerHeader = header.toLowerCase();
-        
-        // Lewati ID Utama pada mode create karena otomatis di sisi Apps Script
-        if (index === 0 && actionType === 'create') return;
+        if (index === 0 && actionType === 'create') return; // Skip Kolom ID Utama jika data baru
 
         const div = document.createElement('div');
         div.className = 'flex flex-col gap-1';
 
         const label = document.createElement('label');
-        label.className = 'font-semibold text-slate-600 text-xs';
+        label.className = 'font-semibold text-slate-600 text-[11px]';
         label.innerText = header;
         div.appendChild(label);
 
         let inputElement;
         const currentVal = (actionType === 'update' && activeRowData) ? activeRowData[header] : '';
 
-        // KONDISI 1: DROPDOWN NAMA SISWA (HANYA UNTUK MENU JURNAL / INVOICE)
+        // KONDISI DROPDOWN SISWA (HANYA BERLAKU DI MENU JURNAL / INVOICE)
         if (lowerHeader.includes('siswa') && bolehDropdown) {
             inputElement = document.createElement('select');
             inputElement.name = header;
-            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl bg-white text-xs focus:outline-none focus:border-indigo-500';
+            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-indigo-500';
             
             const defaultOpt = document.createElement('option');
             defaultOpt.value = '';
@@ -122,11 +130,11 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
                 inputElement.appendChild(opt);
             });
         }
-        // KONDISI 2: DROPDOWN NAMA TENTOR (HANYA UNTUK MENU JURNAL / SLIP GAJI)
+        // KONDISI DROPDOWN TENTOR (HANYA BERLAKU DI MENU JURNAL / SLIP GAJI)
         else if (lowerHeader.includes('tentor') && bolehDropdown) {
             inputElement = document.createElement('select');
             inputElement.name = header;
-            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl bg-white text-xs focus:outline-none focus:border-indigo-500';
+            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-indigo-500';
 
             const defaultOpt = document.createElement('option');
             defaultOpt.value = '';
@@ -142,19 +150,19 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
                 inputElement.appendChild(opt);
             });
         }
-        // KONDISI 3: INPUT BIASA (JIKA BUKAN MENU DI ATAS, TERMASUK INPUT SISWA & TENTOR BARU)
+        // KONDISI INPUT BIASA (TERMASUK KETIK MANUAL KHUSUS INPUT DATA SISWA & TENTOR BARU)
         else {
             inputElement = document.createElement('input');
             inputElement.name = header;
             inputElement.value = currentVal;
-            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500';
+            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500';
 
             if (index === 0 && actionType === 'update') {
                 inputElement.readOnly = true;
                 inputElement.className += ' bg-slate-100 text-slate-400 cursor-not-allowed';
             } else if (lowerHeader.includes('tanggal')) {
                 inputElement.type = 'date';
-            } else if (/harga|gaji|pembayaran|jumlah|tagihan|durasi/i.test(lowerHeader)) {
+            } else if (/harga|gaji|pembayaran|jumlah|tagihan|durasi|menit|bonus|pokok|diterima/i.test(lowerHeader)) {
                 inputElement.type = 'number';
             } else {
                 inputElement.type = 'text';
@@ -169,20 +177,66 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
     modal.classList.remove('hidden-system');
 };
 
-// Fungsi Membuka Modal Mode Edit Data
+// Fungsi Membuka Form Mode Edit
 window.openUpdateCrud = function(sheetName, rowEscaped) {
     const rowData = JSON.parse(decodeURIComponent(atob(rowEscaped)));
     const headers = Object.keys(rowData);
     setupModalDinamis(`Edit Data ${sheetName}`, sheetName, "update", headers, rowData);
 };
 
-// Fungsi Menutup Modal
+// Fungsi Tutup Form Modal
 window.closeCrudModal = function() {
     document.getElementById('crud-modal').classList.add('hidden-system');
     document.getElementById('crud-form').reset();
 };
 
-// PROSES SUBMIT: EKSEKUSI ADD / EDIT DATA KE WEB APP GAS
+// FITUR KOREKSI 2: ENGINE PEMBUAT GAMBAR NOTA DAN UNDUH SEBAGAI JPG
+window.exportToJPG = function(sheetName, rowEscaped) {
+    const row = JSON.parse(decodeURIComponent(atob(rowEscaped)));
+    
+    const nota = document.createElement('div');
+    nota.style = "position:absolute; left:-9999px; width:450px; background:#fff; padding:30px; font-family:sans-serif; color:#334155; border:1px solid #e2e8f0; border-radius:12px;";
+    
+    let isiKonten = `
+        <div style="text-align:center; border-bottom:2px dashed #cbd5e1; padding-bottom:15px; margin-bottom:15px;">
+            <h2 style="margin:0; color:#4f46e5; font-size:22px; font-weight:800;">BIMBEL ILMANA</h2>
+            <p style="margin:4px 0 0; font-size:11px; color:#64748b;">Boyolali, Central Java | Sistem Informasi Administrasi</p>
+        </div>
+        <h3 style="text-align:center; font-size:13px; margin-bottom:25px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:#1e293b;">TANDA BUKTI RESMI ${sheetName}</h3>
+        <table style="width:100%; font-size:12px; border-collapse:collapse;">
+    `;
+
+    Object.keys(row).forEach(key => {
+        let val = row[key];
+        if (typeof val === 'number' && /tagihan|pembayaran|gaji|bonus|total/i.test(key)) val = formatIDR(val);
+        isiKonten += `
+            <tr>
+                <td style="padding:10px 0; color:#64748b; font-weight:600; width:45%; border-bottom:1px solid #f1f5f9;">${key}</td>
+                <td style="padding:10px 0; text-align:right; border-bottom:1px solid #f1f5f9; color:#1e293b; font-weight:700;">${val}</td>
+            </tr>
+        `;
+    });
+
+    isiKonten += `
+        </table>
+        <div style="text-align:center; margin-top:35px; padding-top:15px; border-top:2px dashed #cbd5e1; font-size:10px; color:#94a3b8; line-height:1.5;">
+            Terima kasih telah memercayakan pendidikan putra/putri Anda bersama kami.<br><b>SIM Bimbel Ilmana Cloud System</b>
+        </div>
+    `;
+    
+    nota.innerHTML = isiKonten;
+    document.body.appendChild(nota);
+
+    html2canvas(nota, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `${sheetName}-${row[Object.keys(row)[0]] || 'Doc'}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+        document.body.removeChild(nota);
+    });
+};
+
+// SUBMIT: SAVE ADD / UPDATE KE DATABASE SPREADSHEET
 document.getElementById('crud-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btnSave = document.getElementById('btn-save-crud');
@@ -198,76 +252,51 @@ document.getElementById('crud-form').addEventListener('submit', async (e) => {
     btnSave.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Menyimpan...`;
 
     try {
-        const payload = {
-            action: actionType,
-            sheetName: sheetName,
-            id: idValue,
-            formData: formData
-        };
-
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
+        const payload = { action: actionType, sheetName: sheetName, id: idValue, formData: formData };
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
         const json = await res.json();
 
         if (json.status === 'success') {
             alert(json.message);
             closeCrudModal();
             
-            if (typeof window[`fetch${sheetName.replace(/\s+/g, '')}`] === 'function') {
-                window[`fetch${sheetName.replace(/\s+/g, '')}`]();
-            } else if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') {
-                fetchSiswa();
-            } else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') {
-                fetchTentor();
-            } else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') {
-                fetchKeuangan();
-            } else {
-                location.reload();
-            }
+            // Auto reload modul menu aktif agar langsung sinkron
+            if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') fetchSiswa();
+            else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') fetchTentor();
+            else if (sheetName === 'Jurnal' && typeof fetchJurnal === 'function') fetchJurnal();
+            else if (sheetName === 'Invoice' && typeof fetchInvoice === 'function') fetchInvoice();
+            else if (sheetName === 'Slip Gaji' && typeof fetchSlipgaji === 'function') fetchSlipgaji();
+            else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') fetchKeuangan();
+            else location.reload();
         } else {
             alert("Gagal: " + json.message);
         }
     } catch (err) {
         alert("Terjadi kesalahan jaringan.");
-        console.error(err);
     } finally {
         btnSave.disabled = false;
         btnSave.innerHTML = `Simpan Data`;
     }
 });
 
-// PROSES DELETE: HAPUS DATA DARI WEB APP GAS
+// DELETE: HAPUS DATA DARI WEB APP DATABASE
 window.hapusDataCrud = async function(sheetName, idValue) {
     if (!confirm(`Apakah Anda yakin ingin menghapus data dengan ID: ${idValue}?`)) return;
 
     try {
-        const payload = {
-            action: 'delete',
-            sheetName: sheetName,
-            id: idValue
-        };
-
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
+        const payload = { action: 'delete', sheetName: sheetName, id: idValue };
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
         const json = await res.json();
 
         if (json.status === 'success') {
             alert(json.message);
-            if (typeof window[`fetch${sheetName.replace(/\s+/g, '')}`] === 'function') {
-                window[`fetch${sheetName.replace(/\s+/g, '')}`]();
-            } else if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') {
-                fetchSiswa();
-            } else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') {
-                fetchTentor();
-            } else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') {
-                fetchKeuangan();
-            } else {
-                location.reload();
-            }
+            if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') fetchSiswa();
+            else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') fetchTentor();
+            else if (sheetName === 'Jurnal' && typeof fetchJurnal === 'function') fetchJurnal();
+            else if (sheetName === 'Invoice' && typeof fetchInvoice === 'function') fetchInvoice();
+            else if (sheetName === 'Slip Gaji' && typeof fetchSlipgaji === 'function') fetchSlipgaji();
+            else if (sheetName === 'Laporan Keuangan' && typeof fetchKeuangan === 'function') fetchKeuangan();
+            else location.reload();
         } else {
             alert("Gagal menghapus: " + json.message);
         }
@@ -276,7 +305,7 @@ window.hapusDataCrud = async function(sheetName, idValue) {
     }
 };
 
-// GANTI bagian pemicu tombol paling bawah di `crud-helper.js` dengan ini:
+// FITUR KOREKSI 1: SINKRONISASI TOTAL DEKLARASI TOMBOL ADD TERHADAP KONTROL HEADER MENU MASING-MASING
 window.openCreateSiswa = function() { setupModalDinamis("Tambah Siswa Baru", "Data Siswa", "create", HEADERS_SISWA); };
 window.openCreateTentor = function() { setupModalDinamis("Tambah Tentor Baru", "Data Tentor", "create", HEADERS_TENTOR); };
 window.openCreateJurnal = function() { setupModalDinamis("Tambah Jurnal Mengajar", "Jurnal", "create", HEADERS_JURNAL); };
