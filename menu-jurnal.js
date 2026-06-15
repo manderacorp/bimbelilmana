@@ -1,5 +1,5 @@
-// Struktur kolom tetap: ID, Tanggal, Nama Tentor, Nama Siswa, Materi, Durasi (Menit)
-const HEADERS_JURNAL = ["ID", "Tanggal", "Nama Tentor", "Nama Siswa", "Materi", "Durasi (Menit)"];
+// Sesuaikan dengan kolom Google Sheet: ID Jurnal, Tanggal, Nama Siswa, Nama Tentor, Mata Pelajaran, Materi, Durasi, Catatan
+const HEADERS_JURNAL = ["ID Jurnal", "Tanggal", "Nama Siswa", "Nama Tentor", "Mata Pelajaran", "Materi", "Durasi", "Catatan"];
 
 async function fetchJurnal() {
     currentActiveMenu = "jurnal";
