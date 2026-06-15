@@ -10,13 +10,17 @@ function renderTableModular(container, res, headers, sheetName) {
         res.data.forEach(row => {
             tableHTML += `<tr class="hover:bg-slate-50">`;
             headers.forEach(h => {
-                let val = row[h] !== undefined && row[h] !== null ? row[h] : "-";
+                // Normalisasi pengecekan properti objek (case-insensitive & pemangkasan spasi)
+                let rowKey = Object.keys(row).find(k => k.toLowerCase().trim() === h.toLowerCase().trim());
+                let val = rowKey && row[rowKey] !== undefined && row[rowKey] !== null ? row[rowKey] : "-";
+                
                 if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|terima|bonus|pokok/i.test(h)) val = formatIDR(val);
                 tableHTML += `<td class="px-4 py-3">${val}</td>`;
             });
 
-            const idKey = headers[0];
-            const idValue = row[idKey] ? row[idKey].toString().replace(/'/g, "\\'") : "";
+            // Ambil ID Unik Baris Pertama (Kolom Indeks 0)
+            let actualIdKey = Object.keys(row)[0];
+            let idValue = actualIdKey && row[actualIdKey] ? row[actualIdKey].toString().replace(/'/g, "\\'") : "";
             const rowEscaped = btoa(encodeURIComponent(JSON.stringify(row)));
             
             let aksiButtons = `
@@ -24,6 +28,7 @@ function renderTableModular(container, res, headers, sheetName) {
                 <button onclick="hapusDataCrud('${sheetName}', '${idValue}')" class="p-1 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all cursor-pointer" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>
             `;
 
+            // Tombol Export Gambar Cetak Struk Kuitansi
             if (sheetName === 'Invoice' || sheetName === 'Slip Gaji') {
                 aksiButtons += `
                     <button onclick="exportToJPG('${sheetName}', '${rowEscaped}')" class="p-1 text-emerald-500 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-all cursor-pointer" title="Export Gambar JPG"><i class="fa-solid fa-file-image"></i></button>
@@ -54,8 +59,10 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
     modalActionType.value = actionType;
     container.innerHTML = '';
 
+    // Cari key ID aktual untuk mode update
     if (actionType === 'update' && activeRowData) {
-        modalId.value = activeRowData[headers[0]] || '';
+        let actualIdKey = Object.keys(activeRowData)[0];
+        modalId.value = activeRowData[actualIdKey] || '';
     } else {
         modalId.value = '';
     }
@@ -63,9 +70,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
     let opsiSiswa = [];
     let opsiTentor = [];
 
-    // ATURAN SELEKTIF: Dropdown hanya aktif pada form Invoice, Slip Gaji, dan Jurnal Mengajar saja
     const bolehDropdown = ["Jurnal", "Invoice", "Slip Gaji"].includes(sheetName);
-    
     const butuhSiswa = bolehDropdown && headers.some(h => h.toLowerCase().includes('siswa'));
     const butuhTentor = bolehDropdown && headers.some(h => h.toLowerCase().includes('tentor'));
 
@@ -91,10 +96,10 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
 
     container.innerHTML = '';
 
-    // Susun Field Form HTML
+    // Susun Field Form HTML Secara Dinamis
     headers.forEach((header, index) => {
-        const lowerHeader = header.toLowerCase();
-        if (index === 0 && actionType === 'create') return;
+        const lowerHeader = header.toLowerCase().trim();
+        if (index === 0 && actionType === 'create') return; // Lewati pembuatan ID manual
 
         const div = document.createElement('div');
         div.className = 'flex flex-col gap-1';
@@ -105,10 +110,35 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
         div.appendChild(label);
 
         let inputElement;
-        const currentVal = (actionType === 'update' && activeRowData) ? activeRowData[header] : '';
+        
+        // Cari nilai asal pada data objek row jika dalam mode edit
+        let currentVal = '';
+        if (actionType === 'update' && activeRowData) {
+            let rowKey = Object.keys(activeRowData).find(k => k.toLowerCase().trim() === lowerHeader);
+            currentVal = rowKey ? activeRowData[rowKey] : '';
+        }
 
-        // Dropdown nama siswa di menu Jurnal / Invoice
-        if (lowerHeader.includes('siswa') && bolehDropdown) {
+        // 1. KOREKSI DROPDOWN TIPE (Pemasukan / Pengeluaran) DI MENU LAPORAN KEUANGAN
+        if (lowerHeader === 'tipe' && sheetName === 'Laporan Keuangan') {
+            inputElement = document.createElement('select');
+            inputElement.name = header;
+            inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-indigo-500';
+            
+            const optPemasukan = document.createElement('option');
+            optPemasukan.value = 'Pemasukan';
+            optPemasukan.innerText = 'Pemasukan';
+            if (currentVal === 'Pemasukan') optPemasukan.selected = true;
+
+            const optPengeluaran = document.createElement('option');
+            optPengeluaran.value = 'Pengeluaran';
+            optPengeluaran.innerText = 'Pengeluaran';
+            if (currentVal === 'Pengeluaran') optPengeluaran.selected = true;
+
+            inputElement.appendChild(optPemasukan);
+            inputElement.appendChild(optPengeluaran);
+        }
+        // 2. Dropdown Nama Siswa
+        else if (lowerHeader.includes('siswa') && bolehDropdown) {
             inputElement = document.createElement('select');
             inputElement.name = header;
             inputElement.className = 'w-full p-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-indigo-500';
@@ -127,7 +157,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
                 inputElement.appendChild(opt);
             });
         }
-        // Dropdown nama tentor di menu Jurnal / Slip Gaji
+        // 3. Dropdown Nama Tentor
         else if (lowerHeader.includes('tentor') && bolehDropdown) {
             inputElement = document.createElement('select');
             inputElement.name = header;
@@ -147,7 +177,7 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
                 inputElement.appendChild(opt);
             });
         }
-        // Input ketik biasa (Khusus pendaftaran Data Siswa Baru & Data Tentor Baru agar manual ketik)
+        // 4. Input Standar Berdasarkan Tipe Data
         else {
             inputElement = document.createElement('input');
             inputElement.name = header;
@@ -174,24 +204,21 @@ window.setupModalDinamis = async function(title, sheetName, actionType, headers,
     modal.classList.remove('hidden-system');
 };
 
-// Fungsi Membuka Modal Mode Edit Data
-window.openUpdateCrud = function(sheetName, rowEscaped) {
-    const rowData = JSON.parse(decodeURIComponent(atob(rowEscaped)));
-    const headers = Object.keys(rowData);
-    setupModalDinamis(`Edit Data ${sheetName}`, sheetName, "update", headers, rowData);
-};
-
-// Fungsi Menutup Modal
-window.closeCrudModal = function() {
-    document.getElementById('crud-modal').classList.add('hidden-system');
-    document.getElementById('crud-form').reset();
-};
-
-// EXPORT JPG: Membuat Struk Kuitansi Cetak untuk Invoice & Slip Gaji
+// KOREKSI UTAMA: PERBAIKAN LOGIKA EXPORT GAMBAR STRUK KUITANSI JPG
 window.exportToJPG = function(sheetName, rowEscaped) {
     const row = JSON.parse(decodeURIComponent(atob(rowEscaped)));
     const nota = document.createElement('div');
-    nota.style = "position:absolute; left:-9999px; width:450px; background:#fff; padding:30px; font-family:sans-serif; color:#334155; border:1px solid #e2e8f0; border-radius:12px;";
+    
+    // Memberikan layout visual terstruktur pada canvas bayangan sebelum di-export
+    nota.style.position = "absolute";
+    nota.style.left = "-9999px";
+    nota.style.width = "450px";
+    nota.style.background = "#ffffff";
+    nota.style.padding = "30px";
+    nota.style.fontFamily = "sans-serif";
+    nota.style.color = "#334155";
+    nota.style.border = "1px solid #e2e8f0";
+    nota.style.borderRadius = "12px";
     
     let isiKonten = `
         <div style="text-align:center; border-bottom:2px dashed #cbd5e1; padding-bottom:15px; margin-bottom:15px;">
@@ -204,10 +231,12 @@ window.exportToJPG = function(sheetName, rowEscaped) {
 
     Object.keys(row).forEach(key => {
         let val = row[key];
-        if (typeof val === 'number' && /tagihan|pembayaran|gaji|bonus|total/i.test(key)) val = formatIDR(val);
+        if (typeof val === 'number' && /tagihan|pembayaran|gaji|bonus|total|diterima/i.test(key.toLowerCase())) {
+            val = formatIDR(val);
+        }
         isiKonten += `
             <tr>
-                <td style="padding:10px 0; color:#64748b; font-weight:600; width:45%; border-bottom:1px solid #f1f5f9;">${key}</td>
+                <td style="padding:10px 0; color:#64748b; font-weight:600; width:45%; border-bottom:1px solid #f1f5f9; text-transform: capitalize;">${key}</td>
                 <td style="padding:10px 0; text-align:right; border-bottom:1px solid #f1f5f9; color:#1e293b; font-weight:700;">${val}</td>
             </tr>
         `;
@@ -223,13 +252,20 @@ window.exportToJPG = function(sheetName, rowEscaped) {
     nota.innerHTML = isiKonten;
     document.body.appendChild(nota);
 
-    html2canvas(nota, { scale: 2 }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `${sheetName}-${row[Object.keys(row)[0]] || 'Doc'}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.95);
-        link.click();
-        document.body.removeChild(nota);
-    });
+    // Pemanggilan library html2canvas
+    setTimeout(() => {
+        html2canvas(nota, { scale: 2, useCORS: true }).then(canvas => {
+            const link = document.createElement('a');
+            let firstVal = row[Object.keys(row)[0]] || 'Doc';
+            link.download = `${sheetName}-${firstVal}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+            document.body.removeChild(nota);
+        }).catch(err => {
+            alert("Gagal memproses gambar: " + err.message);
+            document.body.removeChild(nota);
+        });
+    }, 100);
 };
 
 // EVENT FORM SUBMIT DATA
@@ -299,11 +335,3 @@ window.hapusDataCrud = async function(sheetName, idValue) {
         alert("Gagal terhubung ke server.");
     }
 };
-
-// PENYELARASAN TOMBOL ADD BERDASARKAN PARAMETER VARIABEL HEADER BAWAAN MODUL ASAL NYA
-window.openCreateSiswa = function() { setupModalDinamis("Tambah Siswa Baru", "Data Siswa", "create", HEADERS_SISWA); };
-window.openCreateTentor = function() { setupModalDinamis("Tambah Tentor Baru", "Data Tentor", "create", HEADERS_TENTOR); };
-window.openCreateJurnal = function() { setupModalDinamis("Tambah Jurnal Mengajar", "Jurnal", "create", HEADERS_JURNAL); };
-window.openCreateInvoice = function() { setupModalDinamis("Buat Invoice Baru", "Invoice", "create", HEADERS_INVOICE); };
-window.openCreateSlipgaji = function() { setupModalDinamis("Buat Slip Gaji Tentor", "Slip Gaji", "create", HEADERS_SLIPGAJI); };
-window.openCreateKeuangan = function() { setupModalDinamis("Catat Transaksi Keuangan Baru", "Laporan Keuangan", "create", HEADERS_KEUANGAN); };
