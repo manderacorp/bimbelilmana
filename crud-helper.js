@@ -61,76 +61,92 @@ window.openUpdateModular = function(sheetName, rowEscaped) {
 };
 
 // ==========================================
-// 2. FUNGSI UTAMA: EKSPOR DATA KE JPG (ANTI-GAGAL)
+// 2. FUNGSI UTAMA: EKSPOR DATA KE JPG (ANTI-GAGAL & AUTO-INJECT CDN)
 // ==========================================
 window.exportToJPG = function(sheetName, rowEscaped) {
     const row = JSON.parse(decodeURIComponent(atob(rowEscaped)));
-    const nota = document.createElement('div');
-    
-    // Setting CSS Standard Arial/Sans-Serif agar html2canvas tidak crash menghitung rasio dimensi teks
-    nota.style.position = "absolute";
-    nota.style.left = "-9999px";
-    nota.style.top = "0";
-    nota.style.width = "400px";
-    nota.style.background = "#ffffff";
-    nota.style.padding = "24px";
-    nota.style.fontFamily = "Arial, sans-serif";
-    nota.style.color = "#1e293b";
-    nota.style.border = "1px solid #e2e8f0";
-    nota.style.borderRadius = "8px";
-    
-    let isiKonten = `
-        <div style="text-align:center; border-bottom:2px dashed #cbd5e1; padding-bottom:12px; margin-bottom:16px;">
-            <h2 style="margin:0; color:#4f46e5; font-size:20px; font-weight:bold;">BIMBEL ILMANA</h2>
-            <p style="margin:4px 0 0; font-size:11px; color:#64748b;">Boyolali, Jawa Tengah | Cloud Admin System</p>
-        </div>
-        <h3 style="text-align:center; font-size:12px; margin-bottom:20px; text-transform:uppercase; font-weight:bold; color:#0f172a; letter-spacing:0.5px;">BUKTI RESMI TRANSAKSI ${sheetName}</h3>
-        <table style="width:100%; font-size:12px; border-collapse:collapse;">
-    `;
 
-    Object.keys(row).forEach(key => {
-        let val = row[key];
-        if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|pokok|bonus|diterima/i.test(key.toLowerCase())) {
-            val = formatIDR(val);
-        }
-        isiKonten += `
-            <tr>
-                <td style="padding:8px 0; color:#475569; width:45%; border-bottom:1px solid #f1f5f9; text-transform:capitalize;">${key}</td>
-                <td style="padding:8px 0; text-align:right; border-bottom:1px solid #f1f5f9; color:#0f172a; font-weight:bold;">${val}</td>
-            </tr>
+    // Fungsi Internal Jalankan Cetak Gambar setelah html2canvas dipastikan siap
+    function eksekusiCetak() {
+        const nota = document.createElement('div');
+        
+        // Setting CSS Standard Arial/Sans-Serif agar aman & rapi
+        nota.style.position = "absolute";
+        nota.style.left = "-9999px";
+        nota.style.top = "0";
+        nota.style.width = "400px";
+        nota.style.background = "#ffffff";
+        nota.style.padding = "24px";
+        nota.style.fontFamily = "Arial, sans-serif";
+        nota.style.color = "#1e293b";
+        nota.style.border = "1px solid #e2e8f0";
+        nota.style.borderRadius = "8px";
+        
+        let isiKonten = `
+            <div style="text-align:center; border-bottom:2px dashed #cbd5e1; padding-bottom:12px; margin-bottom:16px;">
+                <h2 style="margin:0; color:#4f46e5; font-size:20px; font-weight:bold;">BIMBEL ILMANA</h2>
+                <p style="margin:4px 0 0; font-size:11px; color:#64748b;">Boyolali, Jawa Tengah | Cloud Admin System</p>
+            </div>
+            <h3 style="text-align:center; font-size:12px; margin-bottom:20px; text-transform:uppercase; font-weight:bold; color:#0f172a; letter-spacing:0.5px;">BUKTI RESMI TRANSAKSI ${sheetName}</h3>
+            <table style="width:100%; font-size:12px; border-collapse:collapse;">
         `;
-    });
 
-    isiKonten += `
-        </table>
-        <div style="text-align:center; margin-top:24px; padding-top:12px; border-top:2px dashed #cbd5e1; font-size:10px; color:#94a3b8; line-height:1.4;">
-            Terima kasih atas dedikasi dan kepercayaan Anda bersama kami.<br><b>SIM Admin Bimbel Ilmana</b>
-        </div>
-    `;
-    
-    nota.innerHTML = isiKonten;
-    document.body.appendChild(nota);
-
-    // Memberikan delay waktu render agar html2canvas selesai memuat library DOM secara utuh
-    setTimeout(() => {
-        if (typeof html2canvas === 'undefined') {
-            alert("Error: Library html2canvas belum termuat di index.html!");
-            document.body.removeChild(nota);
-            return;
-        }
-
-        html2canvas(nota, { scale: 2, logging: false, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
-            const link = document.createElement('a');
-            let namaFileUnik = row[Object.keys(row)[0]] || 'Dokumen';
-            link.download = `Kuitansi-${sheetName}-${namaFileUnik}.jpg`;
-            link.href = canvas.toDataURL('image/jpeg', 0.95);
-            link.click();
-            document.body.removeChild(nota);
-        }).catch(err => {
-            alert("Sistem gagal mengekspor berkas JPG: " + err.message);
-            document.body.removeChild(nota);
+        Object.keys(row).forEach(key => {
+            let val = row[key];
+            if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|pokok|bonus|diterima/i.test(key.toLowerCase())) {
+                val = formatIDR(val);
+            }
+            isiKonten += `
+                <tr>
+                    <td style="padding:8px 0; color:#475569; width:45%; border-bottom:1px solid #f1f5f9; text-transform:capitalize;">${key}</td>
+                    <td style="padding:8px 0; text-align:right; border-bottom:1px solid #f1f5f9; color:#0f172a; font-weight:bold;">${val}</td>
+                </tr>
+            `;
         });
-    }, 250);
+
+        isiKonten += `
+            </table>
+            <div style="text-align:center; margin-top:24px; padding-top:12px; border-top:2px dashed #cbd5e1; font-size:10px; color:#94a3b8; line-height:1.4;">
+                Terima kasih atas dedikasi dan kepercayaan Anda bersama kami.<br><b>SIM Admin Bimbel Ilmana</b>
+            </div>
+        `;
+        
+        nota.innerHTML = isiKonten;
+        document.body.appendChild(nota);
+
+        // Kasih jeda sedikit agar layout HTML ter-render sempurna di background browser
+        setTimeout(() => {
+            html2canvas(nota, { scale: 2, logging: false, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
+                const link = document.createElement('a');
+                let namaFileUnik = row[Object.keys(row)[0]] || 'Dokumen';
+                link.download = `Kuitansi-${sheetName}-${namaFileUnik}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+                document.body.removeChild(nota);
+            }).catch(err => {
+                alert("Sistem gagal mengekspor berkas JPG: " + err.message);
+                document.body.removeChild(nota);
+            });
+        }, 200);
+    }
+
+    // CEK DAN AUTO-INJECT JIKA LIBRARY HTML2CANVAS BELUM ANGGREK / READY
+    if (typeof html2canvas === 'undefined') {
+        console.log("Library html2canvas belum siap, mencoba memuat ulang via backup CDN...");
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+        script.onload = () => {
+            console.log("Backup CDN html2canvas berhasil dimuat.");
+            eksekusiCetak();
+        };
+        script.onerror = () => {
+            alert("Gagal memuat library cetak gambar. Periksa koneksi internet Anda Bos!");
+        };
+        document.head.appendChild(script);
+    } else {
+        // Jika sudah ada langsung jalankan tanpa interupsi
+        eksekusiCetak();
+    }
 };
 
 // ==========================================
