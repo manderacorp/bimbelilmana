@@ -61,24 +61,23 @@ window.openUpdateModular = function(sheetName, rowEscaped) {
 };
 
 // ==========================================
-// 2. FUNGSI UTAMA: EKSPOR DATA KE JPG (ANTI-OKLCH CRASH)
+// 2. FUNGSI UTAMA: EKSPOR DATA KE JPG (ANTI-OKLCH PATCH)
 // ==========================================
 window.exportToJPG = function(sheetName, rowEscaped) {
     const row = JSON.parse(decodeURIComponent(atob(rowEscaped)));
 
     function eksekusiCetak() {
-        // MEMBUAT CONTAINER UTAMA YANG TERISOLASI DARI TAILWIND
+        // MEMBUAT CONTAINER UTAMA YANG TERISOLASI
         const notaContainer = document.createElement('div');
         notaContainer.style.position = "absolute";
         notaContainer.style.left = "-9999px";
         notaContainer.style.top = "0";
         notaContainer.style.width = "450px";
         notaContainer.style.padding = "30px";
-        notaContainer.style.background = "#ffffff"; // Menggunakan HEX murni
-        notaContainer.style.color = "#334155";      // Menggunakan HEX murni
+        notaContainer.style.background = "#ffffff"; 
+        notaContainer.style.color = "#334155";      
         notaContainer.style.boxSizing = "border-box";
         
-        // Desain struktur nota belanja/kuitansi menggunakan elemen HTML murni standar lama
         let isiKonten = `
             <div style="text-align: center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 15px; margin-bottom: 20px;">
                 <h2 style="margin: 0; padding: 0; color: #4f46e5; font-family: Arial, sans-serif; font-size: 24px; font-weight: bold;">BIMBEL ILMANA</h2>
@@ -117,15 +116,36 @@ window.exportToJPG = function(sheetName, rowEscaped) {
         notaContainer.innerHTML = isiKonten;
         document.body.appendChild(notaContainer);
 
-        // Eksekusi Render Canvas dengan proteksi penuh dari class warna Tailwind
+        // --- INJEKSI AMAN (PATCH OKLCH FOR HTML2CANVAS) ---
+        // Simpan fungsi asli window.getComputedStyle bawaan browser
+        const fungsiStyleAsli = window.getComputedStyle;
+        
+        // Manipulasi fungsi agar jika html2canvas membaca format oklch, diganti string kosong agar tidak crash
+        window.getComputedStyle = function(el, pseudoElt) {
+            const styles = fungsiStyleAsli(el, pseudoElt);
+            const propertiProxy = new Proxy(styles, {
+                get(target, prop) {
+                    const nilaiAsli = target[prop];
+                    if (typeof nilaiAsli === 'string' && nilaiAsli.includes('oklch')) {
+                        return ''; // Jinakkan warna oklch penyebab error
+                    }
+                    return nilaiAsli;
+                }
+            });
+            return propertiProxy;
+        };
+
+        // Eksekusi Render Gambar Kuitansi
         setTimeout(() => {
             html2canvas(notaContainer, {
                 scale: 2,
                 logging: false,
                 useCORS: true,
-                backgroundColor: "#ffffff", // Memaksa background putih solid bebas OKLCH
-                ignoreElements: (element) => false // Pastikan tidak mengintip element luar
+                backgroundColor: "#ffffff"
             }).then(canvas => {
+                // Kembalikan fungsi getComputedStyle asli browser agar komponen dashboard Tailwind v4 normal lagi
+                window.getComputedStyle = fungsiStyleAsli;
+
                 const link = document.createElement('a');
                 let namaFileUnik = row[Object.keys(row)[0]] || 'Dokumen';
                 link.download = `Kuitansi-${sheetName}-${namaFileUnik}.jpg`;
@@ -133,13 +153,14 @@ window.exportToJPG = function(sheetName, rowEscaped) {
                 link.click();
                 document.body.removeChild(notaContainer);
             }).catch(err => {
+                // Kembalikan fungsi asli jika error melanda
+                window.getComputedStyle = fungsiStyleAsli;
                 alert("Sistem gagal mengekspor berkas JPG: " + err.message);
                 document.body.removeChild(notaContainer);
             });
         }, 200);
     }
 
-    // Proteksi pemuatan library html2canvas
     if (typeof html2canvas === 'undefined') {
         const script = document.createElement('script');
         script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -162,13 +183,11 @@ window.setupModalDinamis = function(title, sheetName, actionType, headers, dataO
     const container = document.getElementById('modal-fields-container');
     container.innerHTML = '';
     
-    // Primary ID diletakkan pada field teratas
     const idKey = headers[0];
     let idValue = dataObj ? dataObj[idKey] : '';
     document.getElementById('modal-id').value = idValue;
 
     headers.forEach((h, index) => {
-        // Kolom pertama (ID) dikunci otomatis (disabled) jika tipenya update/edit
         if (index === 0) {
             container.innerHTML += `
                 <div class="flex flex-col gap-1">
@@ -179,7 +198,6 @@ window.setupModalDinamis = function(title, sheetName, actionType, headers, dataO
         } else {
             let fieldVal = dataObj && dataObj[h] !== undefined ? dataObj[h] : '';
             
-            // Format isian khusus berdasarkan penamaan kolom komponen
             if (h.toLowerCase().trim() === 'status' || h.toLowerCase().trim() === 'status pembayaran') {
                 container.innerHTML += `
                     <div class="flex flex-col gap-1">
@@ -219,7 +237,6 @@ window.setupModalDinamis = function(title, sheetName, actionType, headers, dataO
     document.getElementById('crud-modal').classList.remove('hidden-system');
 };
 
-// PERBAIKAN UTAMA: Fungsi Penutup Modal agar sinkron dengan file index.html Anda
 window.closeCrudModal = function() {
     document.getElementById('crud-modal').classList.add('hidden-system');
     document.getElementById('crud-form').reset();
@@ -263,7 +280,6 @@ document.getElementById('crud-form').addEventListener('submit', async (e) => {
             alert(json.message);
             closeCrudModal();
             
-            // Auto Refresh data visual tabel sesuai menu aktif saat ini tanpa reload halaman
             if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') fetchSiswa();
             else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') fetchTentor();
             else if (sheetName === 'Jurnal' && typeof fetchJurnal === 'function') fetchJurnal();
@@ -295,7 +311,6 @@ window.hapusDataCrud = async function(sheetName, idValue) {
 
         if (json.status === 'success') {
             alert(json.message);
-            // Auto Refresh data setelah penghapusan berhasil
             if (sheetName === 'Data Siswa' && typeof fetchSiswa === 'function') fetchSiswa();
             else if (sheetName === 'Data Tentor' && typeof fetchTentor === 'function') fetchTentor();
             else if (sheetName === 'Jurnal' && typeof fetchJurnal === 'function') fetchJurnal();
