@@ -61,117 +61,78 @@ window.openUpdateModular = function(sheetName, rowEscaped) {
 };
 
 // ==========================================
-// 2. FUNGSI UTAMA: EKSPOR DATA KE JPG (ANTI-OKLCH PATCH)
+// 2. FUNGSI UTAMA: CETAK KUITANSI RESMI (ANTI-CRASH TAILWIND V4)
 // ==========================================
 window.exportToJPG = function(sheetName, rowEscaped) {
     const row = JSON.parse(decodeURIComponent(atob(rowEscaped)));
 
-    function eksekusiCetak() {
-        // MEMBUAT CONTAINER UTAMA YANG TERISOLASI
-        const notaContainer = document.createElement('div');
-        notaContainer.style.position = "absolute";
-        notaContainer.style.left = "-9999px";
-        notaContainer.style.top = "0";
-        notaContainer.style.width = "450px";
-        notaContainer.style.padding = "30px";
-        notaContainer.style.background = "#ffffff"; 
-        notaContainer.style.color = "#334155";      
-        notaContainer.style.boxSizing = "border-box";
-        
-        let isiKonten = `
+    // 1. Buat elemen area cetak khusus
+    const printContainer = document.createElement('div');
+    printContainer.id = "area-cetak-sim-bimbel";
+    
+    // Desain struktur kuitansi dengan CSS inline murni standar cetak print
+    let isiKonten = `
+        <div style="width: 450px; margin: 0 auto; padding: 30px; background: #ffffff; color: #334155; box-sizing: border-box; font-family: Arial, sans-serif; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="text-align: center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 15px; margin-bottom: 20px;">
-                <h2 style="margin: 0; padding: 0; color: #4f46e5; font-family: Arial, sans-serif; font-size: 24px; font-weight: bold;">BIMBEL ILMANA</h2>
-                <p style="margin: 5px 0 0 0; padding: 0; font-family: Arial, sans-serif; font-size: 11px; color: #64748b;">Boyolali, Jawa Tengah | Cloud Admin System</p>
+                <h2 style="margin: 0; padding: 0; color: #4f46e5; font-size: 24px; font-weight: bold;">BIMBEL ILMANA</h2>
+                <p style="margin: 5px 0 0 0; padding: 0; font-size: 11px; color: #64748b;">Boyolali, Jawa Tengah | Cloud Admin System</p>
             </div>
             
-            <h3 style="text-align: center; font-family: Arial, sans-serif; font-size: 13px; margin: 0 0 25px 0; padding: 0; text-transform: uppercase; font-weight: bold; color: #0f172a; letter-spacing: 1px;">
+            <h3 style="text-align: center; font-size: 13px; margin: 0 0 25px 0; padding: 0; text-transform: uppercase; font-weight: bold; color: #0f172a; letter-spacing: 1px;">
                 BUKTI RESMI TRANSAKSI ${sheetName.toUpperCase()}
             </h3>
             
-            <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 13px;">
-        `;
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    `;
 
-        Object.keys(row).forEach(key => {
-            let val = row[key];
-            if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|pokok|bonus|diterima/i.test(key.toLowerCase())) {
-                val = formatIDR(val);
-            }
-            isiKonten += `
-                <tr>
-                    <td style="padding: 10px 0; color: #475569; width: 45%; border-bottom: 1px solid #f1f5f9; text-transform: capitalize; font-family: Arial, sans-serif;">${key}</td>
-                    <td style="padding: 10px 0; text-align: right; border-bottom: 1px solid #f1f5f9; color: #0f172a; font-weight: bold; font-family: Arial, sans-serif;">${val}</td>
-                </tr>
-            `;
-        });
-
+    Object.keys(row).forEach(key => {
+        let val = row[key];
+        if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|pokok|bonus|diterima/i.test(key.toLowerCase())) {
+            val = formatIDR(val);
+        }
         isiKonten += `
-            </table>
-            
-            <div style="text-align: center; margin-top: 35px; padding-top: 15px; border-top: 2px dashed #cbd5e1; font-family: Arial, sans-serif; font-size: 11px; color: #94a3b8; line-height: 1.5;">
-                Terima kasih atas dedikasi dan kepercayaan Anda bersama kami.<br>
-                <strong style="color: #64748b;">SIM Admin Bimbel Ilmana</strong>
-            </div>
+            <tr>
+                <td style="padding: 10px 0; color: #475569; width: 45%; border-bottom: 1px solid #f1f5f9; text-transform: capitalize;">${key}</td>
+                <td style="padding: 10px 0; text-align: right; border-bottom: 1px solid #f1f5f9; color: #0f172a; font-weight: bold;">${val}</td>
+            </tr>
         `;
+    });
+
+    isiKonten += `
+        </table>
         
-        notaContainer.innerHTML = isiKonten;
-        document.body.appendChild(notaContainer);
+        <div style="text-align: center; margin-top: 35px; padding-top: 15px; border-top: 2px dashed #cbd5e1; font-size: 11px; color: #94a3b8; line-height: 1.5;">
+            Terima kasih atas dedikasi dan kepercayaan Anda bersama kami.<br>
+            <strong style="color: #64748b;">SIM Admin Bimbel Ilmana</strong>
+        </div>
+    </div>
+    `;
+    
+    printContainer.innerHTML = isiKonten;
 
-        // --- INJEKSI AMAN (PATCH OKLCH FOR HTML2CANVAS) ---
-        // Simpan fungsi asli window.getComputedStyle bawaan browser
-        const fungsiStyleAsli = window.getComputedStyle;
+    // 2. Suntikkan CSS khusus Cetak agar dashboard utama sembunyi total saat jendela print aktif
+    const stylePrint = document.createElement('style');
+    stylePrint.innerHTML = `
+        @media print {
+            body * { display: none !important; }
+            #area-cetak-sim-bimbel, #area-cetak-sim-bimbel * { display: block !important; }
+            #area-cetak-sim-bimbel { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    `;
+
+    // 3. Pasang ke dokumen dan eksekusi cetak browser
+    document.head.appendChild(stylePrint);
+    document.body.appendChild(printContainer);
+    
+    // Beri jeda sepersekian detik agar layout siap, lalu panggil cetak browser
+    setTimeout(() => {
+        window.print();
         
-        // Manipulasi fungsi agar jika html2canvas membaca format oklch, diganti string kosong agar tidak crash
-        window.getComputedStyle = function(el, pseudoElt) {
-            const styles = fungsiStyleAsli(el, pseudoElt);
-            const propertiProxy = new Proxy(styles, {
-                get(target, prop) {
-                    const nilaiAsli = target[prop];
-                    if (typeof nilaiAsli === 'string' && nilaiAsli.includes('oklch')) {
-                        return ''; // Jinakkan warna oklch penyebab error
-                    }
-                    return nilaiAsli;
-                }
-            });
-            return propertiProxy;
-        };
-
-        // Eksekusi Render Gambar Kuitansi
-        setTimeout(() => {
-            html2canvas(notaContainer, {
-                scale: 2,
-                logging: false,
-                useCORS: true,
-                backgroundColor: "#ffffff"
-            }).then(canvas => {
-                // Kembalikan fungsi getComputedStyle asli browser agar komponen dashboard Tailwind v4 normal lagi
-                window.getComputedStyle = fungsiStyleAsli;
-
-                const link = document.createElement('a');
-                let namaFileUnik = row[Object.keys(row)[0]] || 'Dokumen';
-                link.download = `Kuitansi-${sheetName}-${namaFileUnik}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.95);
-                link.click();
-                document.body.removeChild(notaContainer);
-            }).catch(err => {
-                // Kembalikan fungsi asli jika error melanda
-                window.getComputedStyle = fungsiStyleAsli;
-                alert("Sistem gagal mengekspor berkas JPG: " + err.message);
-                document.body.removeChild(notaContainer);
-            });
-        }, 200);
-    }
-
-    if (typeof html2canvas === 'undefined') {
-        const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-        script.onload = eksekusiCetak;
-        script.onerror = () => alert("Gagal memuat sistem cetak kuitansi.");
-        document.head.appendChild(script);
-    } else {
-        eksekusiCetak();
-    }
+        // 4. Bersihkan kembali dokumen setelah selesai cetak / batal agar normal lagi
+        document.body.removeChild(printContainer);
+        document.head.removeChild(stylePrint);
+    }, 150);
 };
-
 // ==========================================
 // 3. FUNGSI OTOMATISASI FORM MODAL INPUT / EDIT
 // ==========================================
