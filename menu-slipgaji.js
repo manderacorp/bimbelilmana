@@ -1,5 +1,5 @@
-// Struktur kolom tetap: ID Slip, Bulan, Nama Tentor, Gaji Pokok, Bonus, Total Diterima
-const HEADERS_SLIPGAJI = ["ID Slip", "Bulan", "Nama Tentor", "Gaji Pokok", "Bonus", "Total Diterima"];
+// Sesuaikan dengan kolom Google Sheet: ID Slip, Bulan/Tahun, Nama Tentor, Total Durasi, Gaji Pokok, Status
+const HEADERS_SLIPGAJI = ["ID Slip", "Bulan/Tahun", "Nama Tentor", "Total Durasi", "Gaji Pokok", "Status"];
 
 async function fetchSlipgaji() {
     currentActiveMenu = "slipgaji";
