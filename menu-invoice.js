@@ -1,5 +1,5 @@
-// Struktur kolom tetap: ID Invoice, Tanggal, Nama Siswa, Total Tagihan, Status Pembayaran
-const HEADERS_INVOICE = ["ID Invoice", "Tanggal", "Nama Siswa", "Total Tagihan", "Status Pembayaran"];
+// Sesuaikan dengan kolom Google Sheet: ID Invoice, Bulan/Tahun, Nama Siswa, Jumlah Pertemuan, Total Durasi, Jumlah Pembayaran, Status
+const HEADERS_INVOICE = ["ID Invoice", "Bulan/Tahun", "Nama Siswa", "Jumlah Pertemuan", "Total Durasi", "Jumlah Pembayaran", "Status"];
 
 async function fetchInvoice() {
     currentActiveMenu = "invoice";
