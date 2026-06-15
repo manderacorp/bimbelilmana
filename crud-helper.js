@@ -94,8 +94,8 @@ window.exportToJPG = function(sheetName, rowEscaped) {
                     <td style="vertical-align: middle; padding-left: 10px;">
                         <h1 style="margin: 0; padding: 0; color: #4f46e5; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">BIMBEL ILMANA</h1>
                         <p style="margin: 3px 0 0 0; padding: 0; font-size: 11px; color: #475569; font-weight: 500;">
-                            <i class="fa-solid fa-location-dot"></i> Boyolali, Central Java, Indonesia<br>
-                            <i class="fa-brands fa-whatsapp"></i> WhatsApp Admin: +62 8xx-xxxx-xxxx | Cloud Admin System
+                            <i class="fa-solid fa-location-dot"></i> Gondang No. 46 RT 03/RW 04, Candi, Ampel, Boyolali<br>
+                            <i class="fa-brands fa-whatsapp"></i> WhatsApp Admin: 083866682376 
                         </p>
                     </td>
                     <td style="text-align: right; vertical-align: bottom; width: 250px;">
@@ -162,7 +162,7 @@ window.exportToJPG = function(sheetName, rowEscaped) {
                 <tr>
                     <td style="vertical-align: top; color: #94a3b8; font-size: 11px; font-style: italic; width: 60%;">
                         * Bukti ini sah dikeluarkan secara sistem awan (cloud) SIM Admin Bimbel Ilmana.<br>
-                        Terima kasih atas dedikasi dan kepercayaan Anda bersama kami.
+                        Terima kasih atas kepercayaan Anda bersama kami.
                     </td>
                     <td style="width: 40%; text-align: right; vertical-align: top;">
                         <div style="display: inline-block; text-align: center; width: 160px;">
