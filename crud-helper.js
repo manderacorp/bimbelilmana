@@ -1,6 +1,4 @@
-// SIM Admin Bimbel Ilmana - Core CRUD Helper System
-
-// Fungsi Global Render Tabel Otomatis
+// Fungsi Global Render Tabel Otomatis (Sudah Diperbaiki Cerdas & Anti-Mismatch)
 function renderTableModular(container, res, headers, sheetName) {
     if (res.status === 'success' && res.data && res.data.length > 0) {
         let tableHTML = `<table class="w-full text-left text-xs text-slate-600 border border-slate-100 rounded-lg overflow-hidden"><thead class="bg-slate-50 text-slate-500"><tr>`;
@@ -10,41 +8,43 @@ function renderTableModular(container, res, headers, sheetName) {
         res.data.forEach(row => {
             tableHTML += `<tr class="hover:bg-slate-50">`;
             headers.forEach(h => {
-                // Normalisasi pengecekan properti objek (case-insensitive & pemangkasan spasi)
-                let rowKey = Object.keys(row).find(k => k.toLowerCase().trim() === h.toLowerCase().trim());
+                // NORMALISASI PENCARIAN KEY (Mengatasi Mismatch Huruf Kapital, Spasi, atau Kata Dekat)
+                let rowKey = Object.keys(row).find(k => {
+                    let keyClean = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    let headerClean = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    
+                    // Cek kesamaan langsung atau variasi nama kolom yang sering tertukar
+                    if (keyClean === headerClean) return true;
+                    if (headerClean === 'id' && keyClean.includes('id')) return true;
+                    if (headerClean.includes('nohp') && (keyClean.includes('wa') || keyClean.includes('hp'))) return true;
+                    if (headerClean.includes('status') && keyClean.includes('status')) return true;
+                    if (headerClean.includes('kelas') && keyClean.includes('kelas')) return true;
+                    return false;
+                });
+
                 let val = rowKey && row[rowKey] !== undefined && row[rowKey] !== null ? row[rowKey] : "-";
                 
-                if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|terima|bonus|pokok/i.test(h)) val = formatIDR(val);
+                // Format Rupiah jika mendeteksi angka finansial
+                if (typeof val === 'number' && /harga|gaji|pembayaran|jumlah|tagihan|paket/i.test(h)) val = formatIDR(val);
                 tableHTML += `<td class="px-4 py-3">${val}</td>`;
             });
 
-            // Ambil ID Unik Baris Pertama (Kolom Indeks 0)
+            // Ambil ID Unik Aktual dari Baris Pertama Data Google Sheet
             let actualIdKey = Object.keys(row)[0];
             let idValue = actualIdKey && row[actualIdKey] ? row[actualIdKey].toString().replace(/'/g, "\\'") : "";
             const rowEscaped = btoa(encodeURIComponent(JSON.stringify(row)));
-            
-            let aksiButtons = `
-                <button onclick="openUpdateCrud('${sheetName}', '${rowEscaped}')" class="p-1 text-amber-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-all cursor-pointer" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button onclick="hapusDataCrud('${sheetName}', '${idValue}')" class="p-1 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all cursor-pointer" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>
-            `;
+            const isUserManage = (currentActiveMenu === 'usermanage');
 
-            // Tombol Export Gambar Cetak Struk Kuitansi
-            if (sheetName === 'Invoice' || sheetName === 'Slip Gaji') {
-                aksiButtons += `
-                    <button onclick="exportToJPG('${sheetName}', '${rowEscaped}')" class="p-1 text-emerald-500 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-all cursor-pointer" title="Export Gambar JPG"><i class="fa-solid fa-file-image"></i></button>
-                `;
-            }
-
-            tableHTML += `<td class="px-4 py-3 text-center flex items-center justify-center gap-2">${aksiButtons}</td></tr>`;
+            tableHTML += `<td class="px-4 py-2 text-center flex justify-center gap-2">
+                <button type="button" onclick="openEditModular('${sheetName}', '${idValue}', '${rowEscaped}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded-md cursor-pointer" title="Ubah"><i class="fa-solid fa-pen-to-square"></i></button>
+                ${!isUserManage ? `<button type="button" onclick="executeDeleteModular('${sheetName}', '${idValue}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-md cursor-pointer" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+            </td></tr>`;
         });
-
-        tableHTML += `</tbody></table>`;
-        container.innerHTML = tableHTML;
+        container.innerHTML = tableHTML + `</tbody></table>`;
     } else {
-        container.innerHTML = `<div class="text-xs text-slate-400 py-8 text-center"><i class="fa-solid fa-folder-open text-2xl mb-2 block text-slate-300"></i> Belum ada data di sheet ${sheetName}.</div>`;
+        container.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">Tabel kosong atau data belum dimasukkan di Google Sheet.</div>`;
     }
 }
-
 // FUNGSI UTAMA: PEMBUAT FORM MODAL + LOGIKA DROPDOWN SELEKTIF
 window.setupModalDinamis = async function(title, sheetName, actionType, headers, activeRowData = null) {
     const modal = document.getElementById('crud-modal');
