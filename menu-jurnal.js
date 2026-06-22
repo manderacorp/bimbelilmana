@@ -1,20 +1,12 @@
-// Sesuaikan dengan kolom Google Sheet: ID Jurnal, Tanggal, Nama Siswa, Nama Tentor, Mata Pelajaran, Materi, Durasi, Catatan
-const HEADERS_JURNAL = ["ID Jurnal", "Tanggal", "Nama Siswa", "Nama Tentor", "Mata Pelajaran", "Materi", "Durasi", "Catatan"];
+const COL_JURNAL = ['ID Jurnal', 'Tanggal', 'Nama Siswa', 'Nama Tentor', 'Mata Pelajaran', 'Materi', 'Durasi', 'Catatan'];
 
 async function fetchJurnal() {
-    currentActiveMenu = "jurnal";
-    const container = document.getElementById('container-jurnal');
-    container.innerHTML = `<span class="text-xs text-slate-400"><i class="fa-solid fa-spinner animate-spin mr-1"></i> Memuat Jurnal...</span>`;
-
+    currentActiveMenu = "jurnal"; switchMenu('jurnal');
+    const box = document.getElementById('container-jurnal');
+    box.innerHTML = `<span><i class="fa-solid fa-spinner animate-spin"></i> Sinkronisasi Jurnal...</span>`;
     try {
-        const response = await fetch(`${API_URL}?action=getJurnal`);
-        const res = await response.json();
-        renderTableModular(container, res, HEADERS_JURNAL, 'Jurnal');
-    } catch (err) {
-        container.innerHTML = `<div class="text-xs text-rose-500 py-4 text-center">Gagal memuat jurnal mengajar.</div>`;
-    }
+        const r = await fetch(`${API_URL}?action=getJurnal`);
+        renderTableModular(box, await r.json(), COL_JURNAL, 'Jurnal');
+    } catch(e) { box.innerHTML = "Gagal memuat."; }
 }
-
-window.openCreateJurnal = function() {
-    setupModalDinamis("Tambah Jurnal Mengajar", "Jurnal", "create", HEADERS_JURNAL);
-};
+function openCreateJurnal() { setupModalDinamis("Buat Catatan Jurnal", "Jurnal", "create", COL_JURNAL); }
