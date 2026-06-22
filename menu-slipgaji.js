@@ -1,20 +1,12 @@
-// Sesuaikan dengan kolom Google Sheet: ID Slip, Bulan/Tahun, Nama Tentor, Total Durasi, Gaji Pokok, Status
-const HEADERS_SLIPGAJI = ["ID Slip", "Bulan/Tahun", "Nama Tentor", "Total Durasi", "Gaji Pokok", "Status"];
+const COL_SLIP = ['ID Slip', 'Bulan/Tahun', 'Nama Tentor', 'Total Durasi', 'Gaji Per Jam', 'Total'];
 
 async function fetchSlipgaji() {
-    currentActiveMenu = "slipgaji";
-    const container = document.getElementById('container-slipgaji');
-    container.innerHTML = `<span class="text-xs text-slate-400"><i class="fa-solid fa-spinner animate-spin mr-1"></i> Memuat Slip Gaji...</span>`;
-
+    currentActiveMenu = "slipgaji"; switchMenu('slipgaji');
+    const box = document.getElementById('container-slipgaji');
+    box.innerHTML = `<span><i class="fa-solid fa-spinner animate-spin"></i> Sinkronisasi Payroll...</span>`;
     try {
-        const response = await fetch(`${API_URL}?action=getSlipgaji`);
-        const res = await response.json();
-        renderTableModular(container, res, HEADERS_SLIPGAJI, 'Slip Gaji');
-    } catch (err) {
-        container.innerHTML = `<div class="text-xs text-rose-500 py-4 text-center">Gagal memuat log penggajian.</div>`;
-    }
+        const r = await fetch(`${API_URL}?action=getSlipgaji`);
+        renderTableModular(box, await r.json(), COL_SLIP, 'Slip Gaji');
+    } catch(e) { box.innerHTML = "Gagal memuat."; }
 }
-
-window.openCreateSlipgaji = function() {
-    setupModalDinamis("Buat Slip Gaji Tentor", "Slip Gaji", "create", HEADERS_SLIPGAJI);
-};
+function openCreateSlipgaji() { setupModalDinamis("Penerbitan Slip Gaji", "Slip Gaji", "create", COL_SLIP); }
