@@ -1,20 +1,12 @@
-// Struktur kolom tetap: ID Invoice, Tanggal, Nama Siswa, Total Tagihan, Status Pembayaran
-const HEADERS_INVOICE = ["ID Invoice", "Tanggal", "Nama Siswa", "Total Tagihan", "Status Pembayaran"];
+const COL_INVOICE = ['ID Invoice', 'Bulan/Tahun', 'Nama Siswa', 'Total Durasi', 'Jumlah Pembayaran'];
 
 async function fetchInvoice() {
-    currentActiveMenu = "invoice";
-    const container = document.getElementById('container-invoice');
-    container.innerHTML = `<span class="text-xs text-slate-400"><i class="fa-solid fa-spinner animate-spin mr-1"></i> Memuat Invoice...</span>`;
-
+    currentActiveMenu = "invoice"; switchMenu('invoice');
+    const box = document.getElementById('container-invoice');
+    box.innerHTML = `<span><i class="fa-solid fa-spinner animate-spin"></i> Sinkronisasi Invoice...</span>`;
     try {
-        const response = await fetch(`${API_URL}?action=getInvoice`);
-        const res = await response.json();
-        renderTableModular(container, res, HEADERS_INVOICE, 'Invoice');
-    } catch (err) {
-        container.innerHTML = `<div class="text-xs text-rose-500 py-4 text-center">Gagal memuat data tagihan.</div>`;
-    }
+        const r = await fetch(`${API_URL}?action=getInvoice`);
+        renderTableModular(box, await r.json(), COL_INVOICE, 'Invoice');
+    } catch(e) { box.innerHTML = "Gagal memuat."; }
 }
-
-window.openCreateInvoice = function() {
-    setupModalDinamis("Buat Invoice Baru", "Invoice", "create", HEADERS_INVOICE);
-};
+function openCreateInvoice() { setupModalDinamis("Penerbitan Invoice", "Invoice", "create", COL_INVOICE); }
